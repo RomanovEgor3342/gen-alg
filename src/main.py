@@ -17,28 +17,31 @@ class Solution:
         self.field = [[0 for _ in range(FIELD_SIZE)] for _ in range(FIELD_SIZE)]
 
 
+class Window(QMainWindow):
+    def __init__(self):
+        super(Window, self).__init__()
+
+        self.setWindowTitle("ГА Судоку")
+        self.setGeometry(300, 250, 350, 200)
+
+        self.start_btn = QtWidgets.QPushButton(self)
+        self.start_btn.setText("Запуск")
+        self.start_btn.setFixedWidth(200)
+        self.start_btn.clicked.connect(self.main)
+
+    def main(self):
+        print('ЗАПУЩЕНО')
+
+
 # def evaluate():
 # def crossover():
 # def grade():
 
 def application():
     app = QApplication(sys.argv)
-    window = QMainWindow()
-
-    window.setWindowTitle("ГА Судоку")
-    window.setGeometry(300, 250, 350, 200)
-
-    start_btn = QtWidgets.QPushButton(window)
-    start_btn.setText("Запуск")
-    start_btn.setFixedWidth(200)
-    start_btn.clicked.connect(main)
-
+    window = Window()
     window.show()
     sys.exit(app.exec_())
-
-
-def main():
-    print('ЗАПУЩЕНО')
 
 if __name__ == "__main__":
     application()
