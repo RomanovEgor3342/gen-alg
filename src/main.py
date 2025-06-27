@@ -16,32 +16,18 @@ class Solution:
         self.generation = generation
         self.field = [[0 for _ in range(FIELD_SIZE)] for _ in range(FIELD_SIZE)]
 
-
-class Window(QMainWindow):
-    def __init__(self):
-        super(Window, self).__init__()
-
-        self.setWindowTitle("ГА Судоку")
-        self.setGeometry(300, 250, 350, 200)
-
-        self.start_btn = QtWidgets.QPushButton(self)
-        self.start_btn.setText("Запуск")
-        self.start_btn.setFixedWidth(200)
-        self.start_btn.clicked.connect(self.main)
-
-    def main(self):
-        print('ЗАПУЩЕНО')
-
-
 # def evaluate():
 # def crossover():
 # def grade():
 
-def application():
-    app = QApplication(sys.argv)
-    window = Window()
-    window.show()
-    sys.exit(app.exec_())
+
+def main():
+    print(FIELD_SIZE)
+    print(POPULATION_SIZE)
+    print(P_CROSSOVER)
+    print(P_MUTATION)
+    print(MAX_GENERATIONS)
+
 
 if __name__ == "__main__":
-    application()
+    print("Запущено")
