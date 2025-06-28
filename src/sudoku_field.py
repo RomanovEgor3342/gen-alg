@@ -1,6 +1,7 @@
-import random
 import numpy as np
-
+"""
+Получение начальной расстановки и создание популяции
+"""
 class FieldCreator():
     def __init__(self):
         self.main_permutation = list(range(1, 10)) * 9
