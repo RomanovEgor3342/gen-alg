@@ -13,7 +13,7 @@ class FieldCreator():
             for y in range(9):
                 symbol = file_field[x][y]
                 if symbol != 'x':
-                    self.insert_list.append((x * 9 + y, int(symbol)))
+                    self.insert_list.append((x, y, int(symbol)))
                     self.main_permutation.remove(int(symbol))
         
 
@@ -22,7 +22,7 @@ class FieldCreator():
         for _ in range(entities_amount):
             new_entity = np.random.permutation(self.main_permutation).tolist()
             for item in self.insert_list:
-                new_entity.insert(item[0], item[1])
+                new_entity.insert(item[0] * 9 + item[1], item[2])
             new_entity = [new_entity[i:i + 9] for i in range(0, 81, 9)]
             population.append(new_entity)
 
