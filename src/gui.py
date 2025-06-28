@@ -68,7 +68,8 @@ class GUIWindow(object):
             color: rgb(140, 142, 156);
         """)
         self.tableWidget.setColumnCount(2)
-        self.tableWidget.setHorizontalHeaderLabels(["№ Поколения", "Данные"])
+        self.tableWidget.setHorizontalHeaderLabels(["№", "Данные"])
+        self.tableWidget.setColumnWidth(0, 30)
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -176,22 +177,36 @@ class GUIWindow(object):
         self.data = table
         self.tableWidget.setRowCount(len(self.data))
         for row, (key, value) in enumerate(self.data.items()):
-            self.tableWidget.setItem(row, 0, QtWidgets.QTableWidgetItem(key))
-            self.tableWidget.setItem(row, 1, QtWidgets.QTableWidgetItem(value[0]))
+            item1 = QtWidgets.QTableWidgetItem(key)
+            item1.setTextAlignment(QtCore.Qt.AlignCenter)
+            item2 = QtWidgets.QTableWidgetItem(value[0])
+            item2.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.tableWidget.setItem(row, 0, item1)
+            self.tableWidget.setItem(row, 1, item2)
 
     # --- Отрисовщик графика ---
-    def plot_graph(self, x_data, y_data):
+    def plot_graph(self, x_data, y1, y2):
         if hasattr(self, 'canvas'):
             self.graph_layout.removeWidget(self.canvas)
             self.canvas.setParent(None)
 
+        background_color = (23 / 255, 23 / 255, 26 / 255)
+        spine_color = (174 / 255, 176 / 255, 183 / 255)
+
         figure = Figure(figsize=(5, 3), tight_layout=True)
         self.canvas = FigureCanvas(figure)
         ax = figure.add_subplot(111)
-        ax.plot(x_data, y_data, marker='o')
-        ax.set_title("Пример графика")
-        ax.set_xlabel("X")
-        ax.set_ylabel("Y")
+        ax.plot(x_data, y1, color='red', label='1', marker='o')
+        ax.plot(x_data, y2, color='blue', label='2', marker='o')
+        ax.set_title("График", color=spine_color)
+        ax.set_xlabel("X", color=spine_color)
+        ax.set_ylabel("Y", color=spine_color)
+        figure.patch.set_facecolor(background_color)
+        ax.set_facecolor(background_color)
+        ax.legend(facecolor=background_color, edgecolor=spine_color, labelcolor=spine_color)
+        ax.tick_params(colors=spine_color)
+        for spine in ax.spines.values():
+            spine.set_color(spine_color)
 
         self.graph_layout.addWidget(self.canvas)
 
@@ -212,8 +227,9 @@ class GUIWindow(object):
         print("Запущено")
 
         x = list(range(10))
-        y = [i ** 2 for i in x]
-        self.plot_graph(x, y)
+        y1 = [i ** 2 for i in x]
+        y2 = [i * 3 for i in x]
+        self.plot_graph(x, y1, y2)
 
 
 data = {
