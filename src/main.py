@@ -21,6 +21,9 @@ class Solution:
 # def grade():
 
 
+
+
+
 def main():
     print(FIELD_SIZE)
     print(POPULATION_SIZE)
