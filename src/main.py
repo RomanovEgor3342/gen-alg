@@ -34,6 +34,11 @@ test = [
 ]
 
 
+# ========================== print individual
+def print_ind(ind):
+    print('\n'.join([' '.join(list(map(str, ind[i]))) for i in range(9)]) + '\n')
+# ========================== print individual
+
 # ========================== fitness calculation
 def fitness_full(individual):
     amount = 0
@@ -87,15 +92,25 @@ def group_tournament_selection(population, k=2):
     return best_individuals
 # ========================== selection
 
-# ========================== sexing
-def one_point_crossing_rows(first, second):
-    point = random.randint(1,7)
+# ========================== crossing
+def one_point_crossing_sq(parent1, parent2, fixed_positions):
+    child = [row.copy() for row in parent1] 
 
-    child = first[:point] + second[point:]  
+    num_squares_to_swap = random.randint(1, 7)
 
-    print('\n'.join([' '.join(list(map(str, child[i]))) for i in range(9)]) + '\n')  
+    all_squares = [(i, j) for i in range(0, 9, 3) for j in range(0, 9, 3)]
+    
+    squares_to_swap = random.sample(all_squares, num_squares_to_swap)
+    
+    for block_row, block_col in squares_to_swap:
+        for i in range(block_row, block_row + 3):
+            for j in range(block_col, block_col + 3):
 
-# ========================== sexing
+                if (i, j) not in fixed_positions:
+                    child[i][j] = parent2[i][j]
+    
+    return child
+# ========================== crossing
 
 
 
@@ -119,7 +134,7 @@ if __name__ == "__main__":
     for ind in population:
         print(fitness_full(ind))
     
-    one_point_crossing_rows(population[0], population[1])
+    one_point_crossing_sq(population[0], population[1], field_creator.insert_list_indexes)
 
     for item in population:
         print('\n'.join([' '.join(list(map(str, item[i]))) for i in range(9)]) + '\n')
