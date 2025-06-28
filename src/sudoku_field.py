@@ -15,6 +15,7 @@ class FieldCreator():
                 if symbol != 'x':
                     self.insert_list.append((x * 9 + y, int(symbol)))
                     self.main_permutation.remove(int(symbol))
+        
 
     def GeneratePopulation(self, entities_amount: int) -> list:
         population = []

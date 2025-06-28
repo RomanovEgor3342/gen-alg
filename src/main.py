@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5 import QtWidgets
 import random
 import sys
+from sudoku_field import *
 
 FIELD_SIZE = 9
 POPULATION_SIZE = 200
@@ -68,11 +69,12 @@ def fitness_cut(individual):
                 amount += 1
 
     return amount
+
 # ========================== fitness calculation
 
 
 # ========================== selection
-def group_tournament_selection(population, k=3):
+def group_tournament_selection(population, k=2):
     random.shuffle(population) 
     best_individuals = []
     
@@ -80,9 +82,24 @@ def group_tournament_selection(population, k=3):
         group = population[i:i + k]
         best_in_group = max(group, key=fitness_full)
         best_individuals.append(best_in_group)
+        print(fitness_full(best_in_group))
     
     return best_individuals
 # ========================== selection
+
+# ========================== sexing
+def one_point_crossing_rows(first, second):
+    point = random.randint(1,7)
+
+    child = first[:point] + second[point:]  
+
+    print('\n'.join([' '.join(list(map(str, child[i]))) for i in range(9)]) + '\n')  
+
+# ========================== sexing
+
+
+
+
 
 
 
@@ -95,4 +112,15 @@ def main():
 
 
 if __name__ == "__main__":
-    print(fitness_full(test))
+    field_creator = FieldCreator()
+    field_creator.ReadFromFile('example.txt')
+    # print(field_creator.insert_list)
+    population = field_creator.GeneratePopulation(2)
+    for ind in population:
+        print(fitness_full(ind))
+    
+    one_point_crossing_rows(population[0], population[1])
+
+    for item in population:
+        print('\n'.join([' '.join(list(map(str, item[i]))) for i in range(9)]) + '\n')
+    # print(fitness_full(test))
