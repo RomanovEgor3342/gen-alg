@@ -5,7 +5,7 @@ import random
 Мутация 2 абсолютно рандомных клеток
 """
 def row_mutation(entity: list) -> None:
-    numbers = list(range(1, 10))
+    numbers = list(range(1, 9))
     x = random.choice(numbers)
     first_y = random.choice(numbers)
     numbers.remove(first_y)
@@ -17,7 +17,7 @@ def row_mutation(entity: list) -> None:
 
 
 def column_mutation(entity: list) -> None:
-    numbers = list(range(1, 10))
+    numbers = list(range(1, 9))
     y = random.choice(numbers)
     first_x = random.choice(numbers)
     numbers.remove(first_x)
@@ -28,7 +28,7 @@ def column_mutation(entity: list) -> None:
     entity[second_x][y] = sym
 
 def random_mutation(entity: list) -> None:
-    numbers = list(range(1, 10))
+    numbers = list(range(1, 9))
     first_x = random.choice(numbers)
     second_x = random.choice(numbers)
 
@@ -44,3 +44,4 @@ def random_mutation(entity: list) -> None:
     sym = entity[first_x][first_y]
     entity[first_x][first_y] = entity[second_x][second_y]
     entity[second_x][second_y] = sym
+

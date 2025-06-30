@@ -3,6 +3,8 @@ from PyQt5 import QtWidgets
 import random
 import sys
 from sudoku_field import *
+from mutation import *
+import matplotlib.pyplot as plt
 
 FIELD_SIZE = 9
 POPULATION_SIZE = 200
@@ -87,7 +89,7 @@ def group_tournament_selection(population, k=2):
         group = population[i:i + k]
         best_in_group = max(group, key=fitness_full)
         best_individuals.append(best_in_group)
-        print(fitness_full(best_in_group))
+        # print(fitness_full(best_in_group))
     
     return best_individuals
 # ========================== selection
@@ -114,6 +116,49 @@ def one_point_crossing_sq(parent1, parent2, fixed_positions):
 
 
 
+def genetic_algorithm(population, fixed_positions, generations=2000, population_size=100, mutation_rate=0.1):
+    best_fitness_values = []
+
+    for generation in range(generations):
+        population = sorted(population, key=fitness_full, reverse=True)
+        best = population[0]
+        best_fitness = fitness_full(best)
+        best_fitness_values.append(best_fitness)
+
+        # print(f"Generation {generation}, Best fitness: {best_fitness}")
+        if best_fitness == 243:
+            print("Sudoku solved!")
+            plot_progress(best_fitness_values)
+            return best
+
+        selected = group_tournament_selection(population)
+
+        next_generation = []
+        while len(next_generation) < population_size:
+            parent1, parent2 = random.sample(selected, 2)
+            child = one_point_crossing_sq(parent1, parent2, fixed_positions)
+
+            if random.random() < mutation_rate:
+                random_mutation(child)
+
+            next_generation.append(child)
+
+        population = next_generation
+
+    print("Max generations reached.")
+    plot_progress(best_fitness_values)
+    return max(population, key=fitness_full)
+
+# Функция построения графика
+def plot_progress(fitness_values):
+    plt.figure(figsize=(10, 5))
+    plt.plot(fitness_values, label='Best Fitness')
+    plt.xlabel("Generation")
+    plt.ylabel("Fitness")
+    plt.title("Best Fitness per Generation")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 
 
@@ -129,13 +174,18 @@ def main():
 if __name__ == "__main__":
     field_creator = FieldCreator()
     field_creator.ReadFromFile('example.txt')
-    # print(field_creator.insert_list)
-    population = field_creator.GeneratePopulation(2)
-    for ind in population:
-        print(fitness_full(ind))
+    # # print(field_creator.insert_list)
+    population = field_creator.GeneratePopulation(10)
+    # for ind in population:
+    #     print(fitness_full(ind))
     
-    one_point_crossing_sq(population[0], population[1], field_creator.insert_list_indexes)
+    # one_point_crossing_sq(population[0], population[1], field_creator.insert_list_indexes)
 
-    for item in population:
-        print('\n'.join([' '.join(list(map(str, item[i]))) for i in range(9)]) + '\n')
+    # for item in population:
+    #     print('\n'.join([' '.join(list(map(str, item[i]))) for i in range(9)]) + '\n')
     # print(fitness_full(test))
+
+    solution = genetic_algorithm(population, field_creator.insert_list_indexes)
+    print(fitness_full(solution))
+    for row in solution:
+        print(row)
