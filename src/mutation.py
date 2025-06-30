@@ -52,9 +52,11 @@ def mutation_among_bad_rowsncolumns(entity: list, insert_list_indexes: list, bad
     second_x = second_sum // 9
     second_y = second_sum % 9
 
-    sym = entity[first_x][first_y]
-    entity[first_x][first_y] = entity[second_x][second_y]
-    entity[second_x][second_y] = sym
+    # sym = entity[first_x][first_y]
+    # entity[first_x][first_y] = entity[second_x][second_y]
+    # entity[second_x][second_y] = sym
+
+    entity[first_x][first_y], entity[second_x][second_y] = entity[second_x][second_y], entity[first_x][first_y]
 
 
 
