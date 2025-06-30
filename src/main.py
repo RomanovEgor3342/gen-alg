@@ -24,15 +24,15 @@ class Solution:
 # def grade():
 
 test = [
-    [6, 4, 3, 5, 9, 7, 8, 2, 1],
-    [1, 2, 8, 6, 4, 3, 5, 7, 9],
-    [7, 5, 9, 2, 1, 8, 4, 6, 3],
-    [4, 6, 2, 7, 5, 1, 3, 9, 8],
-    [9, 3, 1, 8, 6, 4, 2, 5, 7],
-    [5, 8, 7, 3, 2, 9, 1, 4, 6],
-    [3, 7, 5, 4, 8, 6, 9, 1, 3],
-    [8, 9, 4, 1, 7, 2, 6, 3, 5],
-    [2, 1, 6, 9, 3, 5, 7, 8, 4]
+    [5, 9, 3, 8, 1, 9, 6, 7, 2],
+[8, 2, 4, 6, 3, 7, 5, 1, 4],
+[6, 1, 7, 4, 5, 2, 8, 3, 9],
+[1, 3, 5, 7, 2, 8, 4, 9, 6],
+[4, 8, 9, 5, 6, 3, 7, 2, 1],
+[7, 6, 2, 1, 9, 4, 3, 8, 5],
+[9, 4, 6, 3, 7, 1, 2, 5, 8],
+[3, 5, 1, 2, 8, 6, 9, 4, 7],
+[2, 7, 8, 9, 4, 5, 1, 6, 3],
 ]
 
 
@@ -132,12 +132,48 @@ def uniform_crossover_sq(parent1, parent2, fixed_positions):
 # ========================== crossing
 # ========================== mutation data
 def get_bad_rows(individual):
-    rows_nums = []
-    for i in range(len(individual)):
-        if len(set(individual[i])) < 9:
-            rows_nums.append(i) 
+    low_fitness_rows = []
 
-    return rows_nums
+    for i in range(9):
+        row_fitness = 0
+        for j in range(9):
+            val = individual[i][j]
+
+            fitness = 0
+
+            if individual[i].count(val) == 1:
+                fitness += 1
+
+            column = [individual[x][j] for x in range(9)]
+            if column.count(val) == 1:
+                fitness += 1
+
+            block_i = (i // 3) * 3
+            block_j = (j // 3) * 3
+            block = [individual[x][y] for x in range(block_i, block_i + 3)
+                                  for y in range(block_j, block_j + 3)]
+            if block.count(val) == 1:
+                fitness += 1
+
+            row_fitness += fitness
+
+        if row_fitness < 27:
+            low_fitness_rows.append(i)
+
+    return low_fitness_rows
+
+def get_bad_columns(individual):
+    columns_indexes = []
+    for j in range(9):
+        column = []
+        for i in range(len(individual)):
+            column.append(individual[i][j])
+        # if len(set(column)) < 9:
+        print(column)
+            # columns_indexes.append(j)
+
+    # return columns_indexes
+        
 # ========================== mutation data
 
 def genetic_algorithm(population, fixed_positions, generations=10000, population_size=100, mutation_rate=0.55):
@@ -160,10 +196,13 @@ def genetic_algorithm(population, fixed_positions, generations=10000, population
         next_generation = []
         while len(next_generation) < population_size:
             parent1, parent2 = random.sample(selected, 2)
-            child = uniform_crossover_sq(parent1, parent2, fixed_positions)
+            child = one_point_crossing_sq(parent1, parent2, fixed_positions)
 
             if random.random() < mutation_rate:
-                random_mutation(child, fixed_positions)
+                # if len(get_bad_rows(child)) > 0:
+                #     mutation_among_bad_rows(child, fixed_positions, get_bad_rows(child), True)
+                # else:
+                    random_mutation(child, fixed_positions)
 
             next_generation.append(child)
 
@@ -200,7 +239,8 @@ if __name__ == "__main__":
     # # print(field_creator.insert_list)
     population = field_creator.GeneratePopulation(200)
 
-    print(get_bad_rows(test))
+    # print(get_bad_rows(test))
+
     # for ind in population:
     #     print(fitness_full(ind))
     
@@ -210,7 +250,7 @@ if __name__ == "__main__":
     #     print('\n'.join([' '.join(list(map(str, item[i]))) for i in range(9)]) + '\n')
     # print(fitness_full(test))
 
-    # solution = genetic_algorithm(population, field_creator.insert_list_indexes, 10000, 200)
-    # print(fitness_full(solution))
-    # for row in solution:
-    #     print(row)
+    solution = genetic_algorithm(population, field_creator.insert_list_indexes, 10000, 200)
+    print(fitness_full(solution))
+    for row in solution:
+        print(row)
