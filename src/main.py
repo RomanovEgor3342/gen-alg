@@ -89,7 +89,6 @@ def group_tournament_selection(population, k=2):
         group = population[i:i + k]
         best_in_group = max(group, key=fitness_full)
         best_individuals.append(best_in_group)
-        # print(fitness_full(best_in_group))
     
     return best_individuals
 # ========================== selection
@@ -112,11 +111,36 @@ def one_point_crossing_sq(parent1, parent2, fixed_positions):
                     child[i][j] = parent2[i][j]
     
     return child
+
+def uniform_crossover_sq(parent1, parent2, fixed_positions):
+    child = [[0 for _ in range(9)] for _ in range(9)]
+
+    for block_row in range(0, 9, 3):
+        for block_col in range(0, 9, 3):
+            source = parent1 if random.random() < 0.5 else parent2
+
+            for i in range(3):
+                for j in range(3):
+                    x, y = block_row + i, block_col + j
+                    if (x, y) in fixed_positions:
+                        # Сохраняем фиксированную ячейку
+                        child[x][y] = parent1[x][y]
+                    else:
+                        child[x][y] = source[x][y]
+                        
+    return child
 # ========================== crossing
+# ========================== mutation data
+def get_bad_rows(individual):
+    rows_nums = []
+    for i in range(len(individual)):
+        if len(set(individual[i])) < 9:
+            rows_nums.append(i) 
 
+    return rows_nums
+# ========================== mutation data
 
-
-def genetic_algorithm(population, fixed_positions, generations=2000, population_size=100, mutation_rate=0.1):
+def genetic_algorithm(population, fixed_positions, generations=10000, population_size=100, mutation_rate=0.55):
     best_fitness_values = []
 
     for generation in range(generations):
@@ -125,7 +149,7 @@ def genetic_algorithm(population, fixed_positions, generations=2000, population_
         best_fitness = fitness_full(best)
         best_fitness_values.append(best_fitness)
 
-        # print(f"Generation {generation}, Best fitness: {best_fitness}")
+        print(f"Generation {generation}, Best fitness: {best_fitness}")
         if best_fitness == 243:
             print("Sudoku solved!")
             plot_progress(best_fitness_values)
@@ -136,10 +160,10 @@ def genetic_algorithm(population, fixed_positions, generations=2000, population_
         next_generation = []
         while len(next_generation) < population_size:
             parent1, parent2 = random.sample(selected, 2)
-            child = one_point_crossing_sq(parent1, parent2, fixed_positions)
+            child = uniform_crossover_sq(parent1, parent2, fixed_positions)
 
             if random.random() < mutation_rate:
-                random_mutation(child)
+                random_mutation(child, fixed_positions)
 
             next_generation.append(child)
 
@@ -170,12 +194,13 @@ def main():
     print(P_MUTATION)
     print(MAX_GENERATIONS)
 
-
 if __name__ == "__main__":
     field_creator = FieldCreator()
     field_creator.ReadFromFile('example.txt')
     # # print(field_creator.insert_list)
-    population = field_creator.GeneratePopulation(10)
+    population = field_creator.GeneratePopulation(200)
+
+    print(get_bad_rows(test))
     # for ind in population:
     #     print(fitness_full(ind))
     
@@ -185,7 +210,7 @@ if __name__ == "__main__":
     #     print('\n'.join([' '.join(list(map(str, item[i]))) for i in range(9)]) + '\n')
     # print(fitness_full(test))
 
-    solution = genetic_algorithm(population, field_creator.insert_list_indexes)
-    print(fitness_full(solution))
-    for row in solution:
-        print(row)
+    # solution = genetic_algorithm(population, field_creator.insert_list_indexes, 10000, 200)
+    # print(fitness_full(solution))
+    # for row in solution:
+    #     print(row)
