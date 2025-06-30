@@ -52,3 +52,4 @@ def mutation_among_bad_rows(entity: list, insert_list_indexes: list, bad_rows_in
 
 
 
+
