@@ -25,7 +25,7 @@ def random_mutation(entity: list, insert_list_indexes: list) -> None:
     entity[first_x][first_y] = entity[second_x][second_y]
     entity[second_x][second_y] = sym
 
-def mutation_among_bad_rows(entity: list, insert_list_indexes: list, bad_rows_columns_indexes: list, row_column_flag: bool) -> None:
+def mutation_among_bad_rowsncolumns(entity: list, insert_list_indexes: list, bad_rows_columns_indexes: list, row_column_flag: bool) -> None:
     numbers = []
     if row_column_flag == True:
         for item in bad_rows_columns_indexes:
