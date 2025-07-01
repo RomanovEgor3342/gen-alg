@@ -1,168 +1,361 @@
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt5 import QtCore, QtGui, QtWidgets
+from main import *
 
 
-class GUIWindow(object):
-    def setup_ui(self, main_window):
-
-        # --- Параметры окна ---
-        main_window.setObjectName("MainWindow")
-        main_window.resize(500, 500)
-        main_window.setMinimumSize(QtCore.QSize(500, 500))
-        main_window.setMaximumSize(QtCore.QSize(500, 500))
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(820, 660)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
+        MainWindow.setSizePolicy(sizePolicy)
+        MainWindow.setMinimumSize(QtCore.QSize(820, 660))
+        MainWindow.setMaximumSize(QtCore.QSize(820, 660))
         font = QtGui.QFont()
         font.setBold(False)
         font.setWeight(50)
-        main_window.setFont(font)
-        main_window.setStyleSheet("""
-            background-color: rgb(30, 32, 34);
-            selection-color: rgb(65, 66, 72);
-            selection-background-color: rgb(33, 35, 39);
-            alternate-background-color: rgb(23, 24, 25);
-            color: rgb(140, 142, 156);
-        """)
-        self.central_widget = QtWidgets.QWidget(main_window)
-        self.central_widget.setObjectName("centralwidget")
+        MainWindow.setFont(font)
+        MainWindow.setStyleSheet("background-color: rgb(235, 236, 236);\n"
+                                 "color: rgb(48, 48, 48);")
 
-        # --- Заголовок окна ---
-        self.label = QtWidgets.QLabel(self.central_widget)
-        self.label.setGeometry(QtCore.QRect(0, 0, 501, 31))
-        self.label.setStyleSheet("background-color: rgb(15, 18, 19);")
-        self.label.setText("")
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
 
-        # --- Название блока параметров ---
-        self.label_name = QtWidgets.QLabel(self.central_widget)
-        self.label_name.setGeometry(QtCore.QRect(10, 325, 481, 21))
+        # --- Вывод лучшего результата ---
+        self.screen = QtWidgets.QLabel(self.centralwidget)
+        self.screen.setGeometry(QtCore.QRect(510, 10, 300, 300))
         font = QtGui.QFont()
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_name.setFont(font)
-        self.label_name.setObjectName("label_name")
+        font.setPointSize(20)
+        font.setUnderline(True)
+        self.screen.setFont(font)
+        self.screen.setStyleSheet("border-color: rgb(220, 222, 221);\n"
+                                  "background-color: rgb(230, 231, 231);\n"
+                                  "color: rgb(99, 99, 99);\n"
+                                  "border-radius: 10px;")
+        self.screen.setAlignment(QtCore.Qt.AlignCenter)
+        self.screen.setObjectName("screen")
 
-        # --- Вкладки ---
-        self.Tabs = QtWidgets.QTabWidget(self.central_widget)
-        self.Tabs.setGeometry(QtCore.QRect(0, 9, 500, 311))
-        font.setPointSize(12)
-        font.setBold(True)
-        font.setWeight(75)
-        self.Tabs.setFont(font)
-        self.Tabs.setStyleSheet("""
-            border-top-color: transparent;
-            selection-color: rgb(93, 95, 109);
-            selection-background-color: rgb(51, 67, 70);
-            background-color: rgb(15, 18, 19);
-        """)
-        self.Tabs.setObjectName("Tabs")
-
-        # --- Вкладка: Главная ---
-        self.main = QtWidgets.QWidget()
-        self.main.setObjectName("main")
-
-        # Таблица
-        self.tableWidget = QtWidgets.QTableWidget(self.main)
-        self.tableWidget.setGeometry(QtCore.QRect(10, 10, 200, 270))
-        self.tableWidget.setStyleSheet("""
-            border-color: rgb(30, 32, 34);
-            background-color: rgb(22, 23, 25);
-            color: rgb(140, 142, 156);
-        """)
-        self.tableWidget.setColumnCount(2)
-        self.tableWidget.setHorizontalHeaderLabels(["№", "Данные"])
+        # --- Таблица ---
+        self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
+        self.tableWidget.setGeometry(QtCore.QRect(310, 10, 190, 300))
+        self.tableWidget.setStyleSheet("border-color: rgb(220, 222, 221);\n"
+                                       "background-color: rgb(230, 231, 231);\n"
+                                       "color: rgb(27, 28, 28);\n"
+                                       "border-radius: 10px;")
+        self.tableWidget.setColumnCount(1)
+        self.tableWidget.setHorizontalHeaderLabels(["Номер поколения"])
         self.tableWidget.setColumnWidth(0, 30)
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
-        # Поле отображения содержимого
-        self.screen = QtWidgets.QLabel(self.main)
-        self.screen.setGeometry(QtCore.QRect(220, 10, 270, 270))
-        font.setPointSize(20)
-        font.setBold(False)
-        font.setUnderline(True)
-        self.screen.setFont(font)
-        self.screen.setStyleSheet("background-color: rgb(22, 23, 25);")
-        self.screen.setAlignment(QtCore.Qt.AlignCenter)
-        self.screen.setObjectName("screen")
-
-        self.Tabs.addTab(self.main, "Главная")
-
-        # --- Вкладка: График ---
+        # --- График ---
         self.graph = QtWidgets.QWidget()
-        self.graph.setObjectName("graph")
+        self.graph.setParent(self.centralwidget)  # добавляем график на центральный виджет!
+        self.graph.setGeometry(QtCore.QRect(310, 320, 500, 330))
+        self.graph.setStyleSheet("border-color: rgb(220, 222, 221);\n"
+                                 "background-color: rgb(230, 231, 231);\n"
+                                 "color: rgb(27, 28, 28);\n"
+                                 "border-radius: 10px;")
         self.graph_layout = QtWidgets.QVBoxLayout(self.graph)
-        self.graph_layout.setContentsMargins(10, 10, 10, 10)
-        self.Tabs.addTab(self.graph, "График")
 
-        # --- Панель параметров ---
-        self.gridLayoutWidget = QtWidgets.QWidget(self.central_widget)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(0, 350, 501, 115))
-        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
-        self.gridLayout.setContentsMargins(10, 10, 10, 10)
-        self.gridLayout.setHorizontalSpacing(20)
-
-        # Метки и поля
-        self.label_field = QtWidgets.QLabel("Размер поля")
-        self.label_population = QtWidgets.QLabel("Размер популяции")
-        self.label_crossover = QtWidgets.QLabel("Вероятность скрещивания")
-        self.label_mutation = QtWidgets.QLabel("Вероятность мутации")
-        self.label_max = QtWidgets.QLabel("Макс. кол-во поколений")
-
-        self.enter_field_size = QtWidgets.QLineEdit()
-        self.enter_population_size = QtWidgets.QLineEdit()
-        self.spin_crossover = QtWidgets.QDoubleSpinBox()
-        self.spin_mutation = QtWidgets.QDoubleSpinBox()
-        self.enter_max = QtWidgets.QLineEdit()
-
-        # Стили
-        style_input = """
-            background-color: rgb(51, 53, 58);
-            border-color: transparent;
-            color: rgb(93, 151, 249);
-        """
-        for widget in [self.enter_field_size, self.enter_population_size, self.enter_max,
-                       self.spin_crossover, self.spin_mutation]:
-            widget.setStyleSheet(style_input)
-
-        # Добавление в сетку
-        self.gridLayout.addWidget(self.label_field, 0, 0)
-        self.gridLayout.addWidget(self.enter_field_size, 0, 1)
-        self.gridLayout.addWidget(self.label_crossover, 0, 2)
-        self.gridLayout.addWidget(self.spin_crossover, 0, 3)
-
-        self.gridLayout.addWidget(self.label_population, 1, 0)
-        self.gridLayout.addWidget(self.enter_population_size, 1, 1)
-        self.gridLayout.addWidget(self.label_mutation, 1, 2)
-        self.gridLayout.addWidget(self.spin_mutation, 1, 3)
-
-        self.gridLayout.addWidget(self.label_max, 3, 0)
-        self.gridLayout.addWidget(self.enter_max, 3, 1)
+        # --- Группа параметров ---
+        self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox.setGeometry(QtCore.QRect(0, 0, 300, 660))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.groupBox.setFont(font)
+        self.groupBox.setStyleSheet("background-color: rgb(228, 229, 229);\n"
+                                    "border-right-color: rgb(177, 179, 179);\n"
+                                    "color: rgb(48, 48, 48);")
+        self.groupBox.setTitle("Параметры")
+        self.groupBox.setMaximumSize(QtCore.QSize(300, 660))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.groupBox.setFont(font)
+        self.groupBox.setStyleSheet("\n"
+                                    "background-color: rgb(228, 229, 229);\n"
+                                    "border-right-color: rgb(177, 179, 179);\n"
+                                    "color: rgb(48, 48, 48);\n"
+                                    "selection-color: rgb(255, 255, 255);\n"
+                                    "selection-background-color: rgb(16, 81, 193);")
+        self.groupBox.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        self.groupBox.setObjectName("groupBox")
 
         # --- Кнопка запуска ---
-        self.horizontalLayoutWidget = QtWidgets.QWidget(self.central_widget)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(0, 460, 501, 41))
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
-        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.start_btn = QtWidgets.QPushButton(self.groupBox)
+        self.start_btn.setGeometry(QtCore.QRect(72, 610, 100, 30))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.start_btn.sizePolicy().hasHeightForWidth())
+        self.start_btn.setSizePolicy(sizePolicy)
+        self.start_btn.setMinimumSize(QtCore.QSize(100, 30))
+        self.start_btn.setMaximumSize(QtCore.QSize(100, 30))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.start_btn.setFont(font)
+        self.start_btn.setStyleSheet("""
+            QPushButton {
+                background-color: rgb(239, 240, 244);
+                border-color: rgb(147, 147, 147);
+                color: rgb(20, 21, 21);
+                selection-color: rgb(255, 255, 255);
+                selection-background-color: rgb(16, 81, 193);
+                border-radius: 10px;
+            }
+            QPushButton:pressed {
+                background-color: rgb(200, 200, 200); /* более тёмный цвет для затемнения */
+            }
+        """)
+        self.start_btn.setObjectName("start_btn")
 
-        spacer_left = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        spacer_right = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.pushButton = QtWidgets.QPushButton(self.groupBox)
+        self.pushButton.setGeometry(QtCore.QRect(178, 610, 50, 30))
+        self.pushButton.setMinimumSize(QtCore.QSize(50, 30))
+        self.pushButton.setMaximumSize(QtCore.QSize(50, 30))
+        self.pushButton.setStyleSheet("""
+            QPushButton {
+                background-color: rgb(239, 240, 244);
+                border-color: rgb(147, 147, 147);
+                color: rgb(20, 21, 21);
+                selection-color: rgb(255, 255, 255);
+                selection-background-color: rgb(16, 81, 193);
+                border-radius: 10px;
+            }
+            QPushButton:pressed {
+                background-color: rgb(200, 200, 200); /* более тёмный цвет для затемнения */
+            }
+        """)
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.groupBox)
+        self.pushButton_2.setGeometry(QtCore.QRect(233, 610, 30, 30))
+        self.pushButton_2.setMinimumSize(QtCore.QSize(30, 30))
+        self.pushButton_2.setMaximumSize(QtCore.QSize(30, 30))
+        font = QtGui.QFont()
+        font.setPointSize(16)
+        font.setBold(False)
+        font.setWeight(50)
+        self.pushButton_2.setFont(font)
+        self.pushButton_2.setStyleSheet("""
+            QPushButton {
+                background-color: rgb(239, 240, 244);
+                border-color: rgb(147, 147, 147);
+                color: rgb(20, 21, 21);
+                selection-color: rgb(255, 255, 255);
+                selection-background-color: rgb(16, 81, 193);
+                border-radius: 10px;
+            }
+            QPushButton:pressed {
+                background-color: rgb(200, 200, 200); /* более тёмный цвет для затемнения */
+            }
+        """)
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.pushButton_3 = QtWidgets.QPushButton(self.groupBox)
+        self.pushButton_3.setGeometry(QtCore.QRect(37, 610, 30, 30))
+        self.pushButton_3.setMinimumSize(QtCore.QSize(30, 30))
+        self.pushButton_3.setMaximumSize(QtCore.QSize(30, 30))
+        font = QtGui.QFont()
+        font.setPointSize(16)
+        font.setBold(False)
+        font.setWeight(50)
+        self.pushButton_3.setFont(font)
+        self.pushButton_3.setStyleSheet("""
+            QPushButton {
+                background-color: rgb(239, 240, 244);
+                border-color: rgb(147, 147, 147);
+                color: rgb(20, 21, 21);
+                selection-color: rgb(255, 255, 255);
+                selection-background-color: rgb(16, 81, 193);
+                border-radius: 10px;
+            }
+            QPushButton:pressed {
+                background-color: rgb(200, 200, 200); /* более тёмный цвет для затемнения */
+            }
+        """)
+        self.pushButton_3.setObjectName("pushButton_3")
 
-        self.start_btn = QtWidgets.QPushButton("Запуск")
-        self.start_btn.setFixedSize(150, 25)
-        self.start_btn.setStyleSheet("background-color: rgb(38, 40, 44);")
+        # --- Кнопка ---
+        self.spin_mutation = QtWidgets.QDoubleSpinBox(self.groupBox)
+        self.spin_mutation.setGeometry(QtCore.QRect(230, 460, 55, 24))
+        self.spin_mutation.setMaximumSize(QtCore.QSize(55, 16777215))
+        self.spin_mutation.setStyleSheet("background-color: rgb(239, 240, 244);\n"
+                                         "border-color: rgb(147, 147, 147);\n"
+                                         "color: rgb(20, 21, 21);\n"
+                                         "selection-color: rgb(255, 255, 255);\n"
+                                         "selection-background-color: rgb(16, 81, 193);\n"
+                                         "border-radius: 5px;")
+        self.spin_mutation.setObjectName("spin_mutation")
 
-        self.horizontalLayout.addItem(spacer_left)
-        self.horizontalLayout.addWidget(self.start_btn)
-        self.horizontalLayout.addItem(spacer_right)
+        # --- Кнопка ---
+        self.spin_crossover = QtWidgets.QDoubleSpinBox(self.groupBox)
+        self.spin_crossover.setGeometry(QtCore.QRect(230, 420, 55, 24))
+        self.spin_crossover.setMaximumSize(QtCore.QSize(55, 16777215))
+        self.spin_crossover.setStyleSheet("background-color: rgb(239, 240, 244);\n"
+                                          "border-color: rgb(147, 147, 147);\n"
+                                          "color: rgb(20, 21, 21);\n"
+                                          "selection-color: rgb(255, 255, 255);\n"
+                                          "selection-background-color: rgb(16, 81, 193);\n"
+                                          "border-radius: 5px;")
+        self.spin_crossover.setObjectName("spin_crossover")
 
-        # --- Завершение интерфейса ---
-        main_window.setCentralWidget(self.central_widget)
-        self.translate_ui(main_window)
-        self.Tabs.setCurrentIndex(0)
-        QtCore.QMetaObject.connectSlotsByName(main_window)
+        # Настройки для spin_mutation
+        self.spin_mutation.setDecimals(2)
+        self.spin_mutation.setRange(0.01, 0.99)
+        self.spin_mutation.setSingleStep(0.01)
 
-        # --- Вызов функции обработчиков ---
+        # Настройки для spin_crossover
+        self.spin_crossover.setDecimals(2)
+        self.spin_crossover.setRange(0.01, 0.99)
+        self.spin_crossover.setSingleStep(0.01)
+
+        self.label_mutation = QtWidgets.QLabel(self.groupBox)
+        self.label_mutation.setGeometry(QtCore.QRect(20, 460, 200, 20))
+        self.label_mutation.setMinimumSize(QtCore.QSize(200, 20))
+        self.label_mutation.setMaximumSize(QtCore.QSize(200, 20))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_mutation.setFont(font)
+        self.label_mutation.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+        self.label_mutation.setObjectName("label_mutation")
+
+        self.label_crossover = QtWidgets.QLabel(self.groupBox)
+        self.label_crossover.setGeometry(QtCore.QRect(20, 420, 200, 20))
+        self.label_crossover.setMinimumSize(QtCore.QSize(200, 20))
+        self.label_crossover.setMaximumSize(QtCore.QSize(200, 20))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_crossover.setFont(font)
+        self.label_crossover.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+        self.label_crossover.setObjectName("label_crossover")
+
+        self.label_population = QtWidgets.QLabel(self.groupBox)
+        self.label_population.setGeometry(QtCore.QRect(20, 340, 200, 20))
+        self.label_population.setMinimumSize(QtCore.QSize(200, 20))
+        self.label_population.setMaximumSize(QtCore.QSize(200, 20))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_population.setFont(font)
+        self.label_population.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+        self.label_population.setObjectName("label_population")
+
+        self.label_max = QtWidgets.QLabel(self.groupBox)
+        self.label_max.setGeometry(QtCore.QRect(20, 300, 200, 20))
+        self.label_max.setMinimumSize(QtCore.QSize(200, 20))
+        self.label_max.setMaximumSize(QtCore.QSize(200, 20))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_max.setFont(font)
+        self.label_max.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+        self.label_max.setObjectName("label_max")
+
+        self.enter_population_size = QtWidgets.QLineEdit(self.groupBox)
+        self.enter_population_size.setGeometry(QtCore.QRect(240, 340, 40, 21))
+        self.enter_population_size.setMaximumSize(QtCore.QSize(40, 16777215))
+        self.enter_population_size.setStyleSheet("background-color: rgb(239, 240, 244);\n"
+                                                 "border-color: rgb(147, 147, 147);\n"
+                                                 "color: rgb(20, 21, 21);\n"
+                                                 "selection-color: rgb(255, 255, 255);\n"
+                                                 "selection-background-color: rgb(16, 81, 193);\n"
+                                                 "border-radius: 5px;")
+        self.enter_population_size.setObjectName("enter_population_size")
+
+        self.enter_max = QtWidgets.QLineEdit(self.groupBox)
+        self.enter_max.setGeometry(QtCore.QRect(240, 300, 40, 21))
+        self.enter_max.setMaximumSize(QtCore.QSize(40, 16777215))
+        self.enter_max.setStyleSheet("background-color: rgb(239, 240, 244);\n"
+                                     "border-color: rgb(147, 147, 147);\n"
+                                     "color: rgb(20, 21, 21);\n"
+                                     "selection-color: rgb(255, 255, 255);\n"
+                                     "selection-background-color: rgb(16, 81, 193);\n"
+                                     "border-radius: 5px;")
+        self.enter_max.setObjectName("enter_max")
+
+        self.label_population_2 = QtWidgets.QLabel(self.groupBox)
+        self.label_population_2.setGeometry(QtCore.QRect(20, 380, 200, 20))
+        self.label_population_2.setMinimumSize(QtCore.QSize(200, 20))
+        self.label_population_2.setMaximumSize(QtCore.QSize(200, 20))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_population_2.setFont(font)
+        self.label_population_2.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+        self.label_population_2.setObjectName("label_population_2")
+        self.enter_population_size_2 = QtWidgets.QLineEdit(self.groupBox)
+        self.enter_population_size_2.setGeometry(QtCore.QRect(240, 380, 40, 21))
+        self.enter_population_size_2.setMaximumSize(QtCore.QSize(40, 16777215))
+        self.enter_population_size_2.setStyleSheet("background-color: rgb(239, 240, 244);\n"
+                                                   "border-color: rgb(147, 147, 147);\n"
+                                                   "color: rgb(20, 21, 21);\n"
+                                                   "selection-color: rgb(255, 255, 255);\n"
+                                                   "selection-background-color: rgb(16, 81, 193);\n"
+                                                   "border-radius: 5px;")
+        self.enter_population_size_2.setObjectName("enter_population_size_2")
+
+        # Ограничение ввода только чисел от 0 до 10000
+        int_validator = QtGui.QIntValidator(0, 10000)
+        self.enter_population_size.setValidator(int_validator)
+        self.enter_max.setValidator(int_validator)
+        self.enter_population_size_2.setValidator(int_validator)
+
+        self.tablescreen = QtWidgets.QTableWidget(self.groupBox)
+        self.tablescreen.setGeometry(QtCore.QRect(40, 60, 220, 220))
+        self.tablescreen.setMinimumSize(QtCore.QSize(220, 220))
+        self.tablescreen.setMaximumSize(QtCore.QSize(220, 220))
+        self.tablescreen.setObjectName("tablescreen")
+        rows, cols = 9, 9
+        self.tablescreen.setRowCount(rows)
+        self.tablescreen.setColumnCount(cols)
+        cell_size = 24
+        for i in range(rows):
+            self.tablescreen.setRowHeight(i, cell_size)
+        for j in range(cols):
+            self.tablescreen.setColumnWidth(j, cell_size)
+        for i in range(rows):
+            for j in range(cols):
+                item = QtWidgets.QTableWidgetItem("x")
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.tablescreen.setItem(i, j, item)
+        self.tablescreen.horizontalHeader().setVisible(False)
+        self.tablescreen.verticalHeader().setVisible(False)
+        self.tablescreen.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
+
+        self.label_f = QtWidgets.QLabel(self.groupBox)
+        self.label_f.setGeometry(QtCore.QRect(90, 30, 110, 16))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_f.setFont(font)
+        self.label_f.setStyleSheet("background-color: rgba(255, 255, 255, 0);\n"
+                                   "color: rgb(48, 48, 48);")
+        self.label_f.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_f.setObjectName("label_f")
+
+        self.error_label = QtWidgets.QLabel(self.groupBox)
+        self.error_label.setGeometry(QtCore.QRect(0, 570, 300, 40))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.error_label.setFont(font)
+        self.error_label.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+        self.error_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.error_label.setObjectName("error_label")
+
+        # --- Подпись к результату ---
+        self.label = QtWidgets.QLabel("Лучший результат", self.centralwidget)
+        self.label.setGeometry(QtCore.QRect(600, 30, 121, 16))
+        self.label.setStyleSheet("background-color: rgb(0, 0, 0, 0);")
+        font = QtGui.QFont()
+        font.setPointSize(13)
+        self.label.setFont(font)
+        self.label.setObjectName("label")
+
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+        # Подключение обработчиков
         self.functions()
 
     # --- Обработчик выбора строки ---
@@ -211,11 +404,22 @@ class GUIWindow(object):
         self.graph_layout.addWidget(self.canvas)
 
     # --- Перевод интерфейса ---
-    def translate_ui(self, main_window):
+    def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        main_window.setWindowTitle(_translate("MainWindow", "ГА Судоку"))
-        self.screen.setText(_translate("MainWindow", "\n".join(["0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0"] * 9)))
-        self.label_name.setText(_translate("MainWindow", "Задайте параметры"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "ГА Судоку"))
+        self.groupBox.setTitle(_translate("MainWindow", "Параметры"))
+        self.start_btn.setText(_translate("MainWindow", "Запуск"))
+        self.label_mutation.setText(_translate("MainWindow", "Вероятность мутации"))
+        self.label_crossover.setText(_translate("MainWindow", "Вероятность скрещивания"))
+        self.label_population.setText(_translate("MainWindow", "Размер популяции"))
+        self.label_max.setText(_translate("MainWindow", "Макс. кол-во поколений"))
+        self.label_f.setText(_translate("MainWindow", "Начальное поле"))
+        self.error_label.setText(_translate("MainWindow", ""))
+        self.label.setText(_translate("MainWindow", "Лучший результат"))
+        self.pushButton.setText(_translate("MainWindow", "Стоп"))
+        self.pushButton_2.setText(_translate("MainWindow", "ᐅ"))
+        self.label_population_2.setText(_translate("MainWindow", "Кол-во случайных клеток"))
+        self.pushButton_3.setText(_translate("MainWindow", "ᐊ"))
 
     # --- Обработчик функций ---
     def functions(self):
@@ -224,12 +428,15 @@ class GUIWindow(object):
 
     # --- Обработчик запуска ---
     def start(self):
-        print("Запущено")
+        print("Программа запущена")
 
         x = list(range(10))
         y1 = [i ** 2 for i in x]
         y2 = [i * 3 for i in x]
         self.plot_graph(x, y1, y2)
+
+    def stop(self):
+        print("Программа остановлена")
 
 
 data = {
@@ -242,8 +449,8 @@ if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    ui = GUIWindow()
-    ui.setup_ui(MainWindow)
-    ui.update_table(data)
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
     MainWindow.show()
+    ui.update_table(data)
     sys.exit(app.exec_())
