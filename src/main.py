@@ -5,23 +5,7 @@ import sys
 from sudoku_field import *
 from mutation import *
 import matplotlib.pyplot as plt
-
-FIELD_SIZE = 9
-POPULATION_SIZE = 200
-P_CROSSOVER = 0.5
-P_MUTATION = 0.5
-MAX_GENERATIONS = 150
-
-
-class Solution:
-    def __init__(self, id=int, generation=int):
-        self.id = id
-        self.generation = generation
-        self.field = [[0 for _ in range(FIELD_SIZE)] for _ in range(FIELD_SIZE)]
-
-# def evaluate():
-# def crossover():
-# def grade():
+from data_saver import *
 
 test = [
     [5, 9, 3, 8, 1, 9, 6, 7, 2],
@@ -117,7 +101,7 @@ def uniform_crossover_sq(parent1, parent2, fixed_positions):
 
     for block_row in range(0, 9, 3):
         for block_col in range(0, 9, 3):
-            source = parent1 if random.random() < 0.5 else parent2
+            source = parent1 if random.random() < 0.55 else parent2
 
             for i in range(3):
                 for j in range(3):
@@ -178,12 +162,17 @@ def get_bad_columns(individual):
 
 def genetic_algorithm(population, fixed_positions, generations=10000, population_size=100, mutation_rate=0.55):
     best_fitness_values = []
+    data_init()
 
     for generation in range(generations):
         population = sorted(population, key=fitness_full, reverse=True)
         best = population[0]
         best_fitness = fitness_full(best)
         best_fitness_values.append(best_fitness)
+
+        # Сохранение данных о поколении
+        data = [best_fitness, field_to_str(best)]
+        save_data(generation, data)
 
         print(f"Generation {generation}, Best fitness: {best_fitness}")
         if best_fitness == 243:
@@ -223,21 +212,17 @@ def plot_progress(fitness_values):
     plt.grid(True)
     plt.show()
 
-
-
-
-def main():
-    print(FIELD_SIZE)
-    print(POPULATION_SIZE)
-    print(P_CROSSOVER)
-    print(P_MUTATION)
-    print(MAX_GENERATIONS)
+def main_start(field: list[list[str]], population_size: int, generation_size: int, p_mutation: float):
+    field_creator = FieldCreator()
+    field_creator.ReadFromList(field)
+    population = field_creator.GeneratePopulation(population_size)
+    solution = genetic_algorithm(population, field_creator.insert_list_indexes, generation_size, population_size, p_mutation)
 
 if __name__ == "__main__":
     field_creator = FieldCreator()
     field_creator.ReadFromFile('example.txt')
     # # print(field_creator.insert_list)
-    population = field_creator.GeneratePopulation(200)
+    population = field_creator.GeneratePopulation(500)
 
     # print(get_bad_rows(test))
 
@@ -250,7 +235,7 @@ if __name__ == "__main__":
     #     print('\n'.join([' '.join(list(map(str, item[i]))) for i in range(9)]) + '\n')
     # print(fitness_full(test))
 
-    solution = genetic_algorithm(population, field_creator.insert_list_indexes, 10000, 200)
+    solution = genetic_algorithm(population, field_creator.insert_list_indexes, 10000, 500)
     print(fitness_full(solution))
     for row in solution:
         print(row)

@@ -2,9 +2,16 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt5 import QtCore, QtGui, QtWidgets
 from main import *
+from data_saver import *
 
 
 class Ui_MainWindow(object):
+    def __init__(self):
+        super().__init__()
+        self._is_paused = False
+        self._is_stopped = False
+
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(820, 660)
@@ -44,9 +51,9 @@ class Ui_MainWindow(object):
                                        "background-color: rgb(230, 231, 231);\n"
                                        "color: rgb(27, 28, 28);\n"
                                        "border-radius: 10px;")
-        self.tableWidget.setColumnCount(1)
-        self.tableWidget.setHorizontalHeaderLabels(["Номер поколения"])
-        self.tableWidget.setColumnWidth(0, 30)
+        self.tableWidget.setColumnCount(2)
+        self.tableWidget.setHorizontalHeaderLabels(["№", "Best fitness"])
+        self.tableWidget.setColumnWidth(0, 60)
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -362,46 +369,56 @@ class Ui_MainWindow(object):
     def on_row_clicked(self):
         row = self.tableWidget.currentRow()
         key = self.tableWidget.item(row, 0).text()
-        label_text = (self.data.get(key))[1]
+        label_text = format_9x9_square(str_to_field((self.data.get(key))[1]))
         self.screen.setText(label_text)
+        print(self.data.get('best_fitness')[:int(key)])
+        self.plot_graph(self.data.get('best_fitness')[:int(key)])
 
     # --- Обновить таблицу ---
-    def update_table(self, table):
-        self.data = table
-        self.tableWidget.setRowCount(len(self.data))
-        for row, (key, value) in enumerate(self.data.items()):
-            item1 = QtWidgets.QTableWidgetItem(key)
+    def update_table(self):
+        self.data = read_data()
+        keys = list(self.data.keys())[1:]  # пропустить первый элемент
+        self.tableWidget.setRowCount(len(keys))
+        for row, key in enumerate(keys):
+            value = self.data[key]
+            item1 = QtWidgets.QTableWidgetItem(str(key))
             item1.setTextAlignment(QtCore.Qt.AlignCenter)
-            item2 = QtWidgets.QTableWidgetItem(value[0])
+            item2 = QtWidgets.QTableWidgetItem(str(value[0]) if value else "")
             item2.setTextAlignment(QtCore.Qt.AlignCenter)
             self.tableWidget.setItem(row, 0, item1)
             self.tableWidget.setItem(row, 1, item2)
 
     # --- Отрисовщик графика ---
-    def plot_graph(self, x_data, y1, y2):
+    def plot_graph(self, fitness_values):
         if hasattr(self, 'canvas'):
             self.graph_layout.removeWidget(self.canvas)
             self.canvas.setParent(None)
-
-        background_color = (23 / 255, 23 / 255, 26 / 255)
-        spine_color = (174 / 255, 176 / 255, 183 / 255)
-
-        figure = Figure(figsize=(5, 3), tight_layout=True)
+        figure = Figure(figsize=(10, 5), tight_layout=True)
         self.canvas = FigureCanvas(figure)
         ax = figure.add_subplot(111)
-        ax.plot(x_data, y1, color='red', label='1', marker='o')
-        ax.plot(x_data, y2, color='blue', label='2', marker='o')
-        ax.set_title("График", color=spine_color)
-        ax.set_xlabel("X", color=spine_color)
-        ax.set_ylabel("Y", color=spine_color)
-        figure.patch.set_facecolor(background_color)
-        ax.set_facecolor(background_color)
-        ax.legend(facecolor=background_color, edgecolor=spine_color, labelcolor=spine_color)
-        ax.tick_params(colors=spine_color)
-        for spine in ax.spines.values():
-            spine.set_color(spine_color)
+        ax.plot(fitness_values, label='Best Fitness')
+        ax.set_xlabel("Generation")
+        ax.set_ylabel("Fitness")
+        ax.set_title("Best Fitness per Generation")
+        ax.legend()
+        ax.grid(True)
 
         self.graph_layout.addWidget(self.canvas)
+
+    def table_to_array(self, table: QtWidgets.QTableWidget) -> list:
+        rows = table.rowCount()
+        cols = table.columnCount()
+        data = []
+
+        for i in range(rows):
+            row_data = []
+            for j in range(cols):
+                item = table.item(i, j)
+                value = item.text() if item else ''
+                row_data.append(value)
+            data.append(row_data)
+
+        return data
 
     # --- Перевод интерфейса ---
     def retranslateUi(self, MainWindow):
@@ -426,24 +443,11 @@ class Ui_MainWindow(object):
         self.tableWidget.clicked.connect(lambda: self.on_row_clicked())
         self.start_btn.clicked.connect(lambda: self.start())
 
-    # --- Обработчик запуска ---
     def start(self):
         print("Программа запущена")
-
-        x = list(range(10))
-        y1 = [i ** 2 for i in x]
-        y2 = [i * 3 for i in x]
-        self.plot_graph(x, y1, y2)
-
-    def stop(self):
-        print("Программа остановлена")
-
-
-data = {
-    "1": ["data", "1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9\n" * 9],
-    "2": ["data", "9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1\n" * 9],
-    "3": ["data", "0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0\n" * 9]
-}
+        array = self.table_to_array(self.tablescreen)
+        main_start(array, int(self.enter_population_size.text()), int(self.enter_max.text()), float(self.spin_mutation.text().replace(',', '.')))
+        self.update_table()
 
 if __name__ == "__main__":
     import sys
@@ -452,5 +456,4 @@ if __name__ == "__main__":
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
-    ui.update_table(data)
     sys.exit(app.exec_())

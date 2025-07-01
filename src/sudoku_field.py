@@ -18,6 +18,15 @@ class FieldCreator():
                     self.insert_list_indexes.append((x, y))
                     self.insert_list_symbols.append(int(symbol))
                     self.main_permutation.remove(int(symbol))
+
+    def ReadFromList(self, arr: list[list[str]]) -> None:
+        for x in range(9):
+            for y in range(9):
+                symbol = arr[x][y]
+                if symbol != 'x':
+                    self.insert_list_indexes.append((x, y))
+                    self.insert_list_symbols.append(int(symbol))
+                    self.main_permutation.remove(int(symbol))
         
 
     def GeneratePopulation(self, entities_amount: int) -> list:
