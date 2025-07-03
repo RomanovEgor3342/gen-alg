@@ -130,7 +130,7 @@ class GeneticAlgorithm():
     # ==========================
 
     # ========================== mutation
-    def random_mutation(self, entity: list) -> None:
+    def random_mutation(self, entity: list[list[int]]) -> None:
         numbers = list(range(0, 81))
         for item in self.insert_list_indexes:
             numbers.remove(item[0] * 9 + item[1])
@@ -146,10 +146,10 @@ class GeneticAlgorithm():
         second_y = second_sum % 9
 
         entity[first_x][first_y], entity[second_x][second_y] = entity[second_x][second_y], entity[first_x][first_y]
-        # ==========================
+    # ==========================
 
     # ========================== main cycle
-    def main_cycle(self, generations=10000, population_size=100, mutation_rate=0.55):
+    def main_cycle(self, generations=10000, population_size=100, mutation_rate=0.3):
         best_fitness_values = []
         data_init()
 
@@ -176,11 +176,18 @@ class GeneticAlgorithm():
                 parent1, parent2 = random.sample(selected, 2)
                 child = self.one_point_crossing_sq(parent1, parent2)
 
-                if random.random() < mutation_rate:
+                if (random_number := random.random()) < mutation_rate:
+                    self.random_mutation(child)
+
                     # if len(get_bad_rows(child)) > 0:
                     #     mutation_among_bad_rows(child, fixed_positions, get_bad_rows(child), True)
                     # else:
-                    self.random_mutation(child)
+
+                # ВОТ СЮДА Я ДОБАВИЛ МЕГА РАНДОМНУЮ МУТАЦИЮ!!!!!!!!!!!!!!!!!!!
+                elif random_number < 0.15:
+                    child = self.very_random_mutation()
+
+
 
                 next_generation.append(child)
 
@@ -191,83 +198,22 @@ class GeneticAlgorithm():
         return max(self.population, key = self.fitness_full)
     # ==========================
 
-    # def mutation_among_bad_rowsncolumns(self, entity: list, bad_rows_columns_indexes: list, row_column_flag: bool) -> None:
-    #     numbers = []
-    #     if row_column_flag == True:
-    #         for item in bad_rows_columns_indexes:
-    #             numbers += list(range(item * 9, item * 9 + 9))
-    #
-    #         for item in self.insert_list_indexes:
-    #             if item[0] in bad_rows_columns_indexes:
-    #                 numbers.remove(item[0] * 9 + item[1])
-    #     else:
-    #         for item in bad_rows_columns_indexes:
-    #             numbers += list(range(item, 81, 9))
-    #
-    #         for item in self.insert_list_indexes:
-    #             if item[1] in bad_rows_columns_indexes:
-    #                 numbers.remove(item[0] * 9 + item[1])
-    #
-    #     first_sum = random.choice(numbers)
-    #     numbers.remove(first_sum)
-    #     second_sum = random.choice(numbers)
-    #
-    #     first_x = first_sum // 9
-    #     first_y = first_sum % 9
-    #
-    #     second_x = second_sum // 9
-    #     second_y = second_sum % 9
-    #
-    #     entity[first_x][first_y], entity[second_x][second_y] = entity[second_x][second_y], entity[first_x][first_y]
-    #
-    #
-    # # ========================== mutation data
-    # def get_bad_rows(self, individual):
-    #     low_fitness_rows = []
-    #
-    #     for i in range(9):
-    #         row_fitness = 0
-    #         for j in range(9):
-    #             val = individual[i][j]
-    #
-    #             fitness = 0
-    #
-    #             if individual[i].count(val) == 1:
-    #                 fitness += 1
-    #
-    #             column = [individual[x][j] for x in range(9)]
-    #             if column.count(val) == 1:
-    #                 fitness += 1
-    #
-    #             block_i = (i // 3) * 3
-    #             block_j = (j // 3) * 3
-    #             block = [individual[x][y] for x in range(block_i, block_i + 3)
-    #                      for y in range(block_j, block_j + 3)]
-    #             if block.count(val) == 1:
-    #                 fitness += 1
-    #
-    #             row_fitness += fitness
-    #
-    #         if row_fitness < 27:
-    #             low_fitness_rows.append(i)
-    #
-    #     return low_fitness_rows
-    #
-    #
-    # def get_bad_columns(self, individual):
-    #     columns_indexes = []
-    #     for j in range(9):
-    #         column = []
-    #         for i in range(len(individual)):
-    #             column.append(individual[i][j])
-    #         # if len(set(column)) < 9:
-    #         print(column)
-    #         # columns_indexes.append(j)
-    #
-    #     # return columns_indexes
-    # # ==========================
+    """
+    ============================
+    ТЕСТОВЫЕ ФУНКЦИИ АЛГОРИТМА
+    ============================
+    """
+    def very_random_mutation(self) -> list[list[int]]:
+        new_entity = np.random.permutation(self.main_permutation).tolist()
+        for index in range(len(self.insert_list_symbols)):
+            new_entity.insert(self.insert_list_indexes[index][0] * 9 + self.insert_list_indexes[index][1],
+                              self.insert_list_symbols[index])
+        new_entity = [new_entity[i:i + 9] for i in range(0, 81, 9)]
+
+        return new_entity
 
 
+# =========================================================
 def main_start(field: list[list[str]], population_size: int, generation_size: int, p_mutation: float):
     gen_alg = GeneticAlgorithm()
     gen_alg.get_data(field, 'l')
@@ -281,9 +227,11 @@ def print_ind(ind):
 
 if __name__ == "__main__":
     gen_alg = GeneticAlgorithm()
+    gen_alg.insert_list_indexes =[(1, 1), (5, 6), (2, 8)]
     gen_alg.get_data('example.txt', 'f')
     gen_alg.GeneratePopulation(500)
-    solution = gen_alg.main_cycle( 10000, 500, 0.55)
+
+    solution = gen_alg.main_cycle( 10000, 500, 0.3)
 
     print(gen_alg.fitness_full(solution))
     print_ind(solution)
