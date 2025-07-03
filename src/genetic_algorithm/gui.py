@@ -578,7 +578,6 @@ class UiMainWindow(object):
             self.alg.main_permutation, self.alg.insert_list_indexes, self.alg.insert_list_symbols = ReadFromList(self.table_to_array(self.tablescreen))
             self.population_size = int(self.enter_population_size.text())
             self.population = self.alg.GeneratePopulation(self.population_size)
-            self.fixed_positions = self.alg.insert_list_indexes
             self.generations = int(self.enter_max.text())
             self.p_mutation = float(self.spin_mutation.text().replace(',', '.'))
             self.update_table()
@@ -614,9 +613,9 @@ class UiMainWindow(object):
     # ========================================
     def start_one(self):
         self.i += 1
-        self.one_iter()
+        self.alg.one_iteration(self.population_size, self.p_mutation, self.i)
         self.update_table()
-        if self.best_fitness_values[-1] == 243:
+        if self.alg.best_fitness_values[-1] == 243:
             print("Sudoku solved!")
             self.to_end.setEnabled(False)
             self.one_step.setEnabled(False)
@@ -636,9 +635,10 @@ class UiMainWindow(object):
     # ========================================
     def start_until_the_end(self):
         for generation in range(self.i, self.generations):
-            self.one_iter(generation)
-            print(f"Generation {self.i + generation}, Best fitness: {self.best_fitness_values[-1]}")
-            if self.best_fitness_values[-1] == 243:
+            # self.one_iter(generation)
+            self.alg.one_iteration(self.population_size, self.p_mutation, generation + self.i)
+            print(f"Generation {self.i + generation}, Best fitness: {self.alg.best_fitness_values[-1]}")
+            if self.alg.best_fitness_values[-1] == 243:
                 self.i += generation
                 print("Sudoku solved!")
                 self.to_end.setEnabled(False)
@@ -656,36 +656,6 @@ class UiMainWindow(object):
                 self.update_table()
                 break
         self.update_table()
-
-    # ========================================
-    #   Одна итерация
-    # ========================================
-    def one_iter(self, generation = 0):
-        population = sorted(self.population, key=self.alg.fitness_full, reverse=True)
-        best = population[0]
-        best_fitness = self.alg.fitness_full(best)
-        self.best_fitness_values.append(best_fitness)
-
-        # Сохранение данных о поколении
-        data = [best_fitness, field_to_str(best)]
-        save_data(self.i + generation, data)
-
-        if best_fitness == 243:
-            return best
-
-        selected = self.alg.group_tournament_selection(population)
-
-        next_generation = []
-        while len(next_generation) < self.population_size:
-            parent1, parent2 = random.sample(selected, 2)
-            child = self.alg.one_point_crossing_sq(parent1, parent2, self.fixed_positions)
-
-            if random.random() < self.p_mutation:
-                self.alg.random_mutation(child, self.fixed_positions)
-
-            next_generation.append(child)
-
-        self.population = next_generation
 
 
 if __name__ == "__main__":
