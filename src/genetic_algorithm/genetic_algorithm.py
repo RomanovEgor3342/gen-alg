@@ -16,16 +16,16 @@ class GeneticAlgorithm():
 
     # ========================== getting data
     @overload
-    def get_data(self, data: list, flag: Literal['l'], reader_writer: ReaderWriter) -> None:
+    def get_data(self, data: list, flag: Literal['l']) -> None:
         ...
     @overload
-    def get_data(self, data: str, flag: Literal['f'], reader_writer: ReaderWriter) -> None:
+    def get_data(self, data: str, flag: Literal['f']) -> None:
         ...
-    def get_data(self, data: Union[list, str], flag: str, reader_writer: ReaderWriter) -> None:
+    def get_data(self, data: Union[list, str], flag: str) -> None:
         if flag == 'l' and isinstance(data, list):
-            self.main_permutation, self.insert_list_indexes, self.insert_list_symbols = reader_writer.ReadFromList(data)
+            self.main_permutation, self.insert_list_indexes, self.insert_list_symbols = ReadFromList(data)
         elif flag == 'f' and isinstance(data, str):
-            self.main_permutation, self.insert_list_indexes, self.insert_list_symbols = reader_writer.ReadFromFile(data)
+            self.main_permutation, self.insert_list_indexes, self.insert_list_symbols = ReadFromFile(data)
         else:
             raise ValueError("Некорректные аргументы")
     # ==========================
@@ -269,9 +269,8 @@ class GeneticAlgorithm():
 
 
 def main_start(field: list[list[str]], population_size: int, generation_size: int, p_mutation: float):
-    reader_writer = ReaderWriter()
     gen_alg = GeneticAlgorithm()
-    gen_alg.get_data(field, 'l', reader_writer)
+    gen_alg.get_data(field, 'l')
     gen_alg.GeneratePopulation(population_size)
     solution = gen_alg.main_cycle(generation_size, population_size, p_mutation)
 
@@ -281,9 +280,8 @@ def print_ind(ind):
 # ==========================
 
 if __name__ == "__main__":
-    reader_writer = ReaderWriter()
     gen_alg = GeneticAlgorithm()
-    gen_alg.get_data('example.txt', 'f', reader_writer)
+    gen_alg.get_data('example.txt', 'f')
     gen_alg.GeneratePopulation(500)
     solution = gen_alg.main_cycle( 10000, 500, 0.55)
 
