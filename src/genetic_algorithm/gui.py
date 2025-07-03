@@ -147,7 +147,7 @@ class UiMainWindow(object):
         #   Вероятность мутации
         # ========================================
         self.label_mutation = QtWidgets.QLabel(self.groupBox)
-        self.label_mutation.setGeometry(QtCore.QRect(20, 490, 200, 20))
+        self.label_mutation.setGeometry(QtCore.QRect(20, 410, 200, 20))
         font = QtGui.QFont()
         font.setPointSize(14)
         self.label_mutation.setFont(font)
@@ -155,7 +155,7 @@ class UiMainWindow(object):
         self.label_mutation.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
 
         self.spin_mutation = QtWidgets.QDoubleSpinBox(self.groupBox)
-        self.spin_mutation.setGeometry(QtCore.QRect(230, 490, 55, 24))
+        self.spin_mutation.setGeometry(QtCore.QRect(230, 410, 55, 24))
         self.spin_mutation.setObjectName("spin_mutation")
         self.spin_mutation.setStyleSheet("background-color: rgb(239, 240, 244);\n"
                                          "border-color: rgb(147, 147, 147);\n"
@@ -167,34 +167,6 @@ class UiMainWindow(object):
         self.spin_mutation.setDecimals(2)
         self.spin_mutation.setRange(0.01, 0.99)
         self.spin_mutation.setSingleStep(0.01)
-
-        # ========================================
-        #   Вероятность скрещивания
-        # ========================================
-        self.label_crossover = QtWidgets.QLabel(self.groupBox)
-        self.label_crossover.setGeometry(QtCore.QRect(20, 450, 200, 20))
-        self.label_crossover.setMinimumSize(QtCore.QSize(200, 20))
-        self.label_crossover.setMaximumSize(QtCore.QSize(200, 20))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        self.label_crossover.setFont(font)
-        self.label_crossover.setObjectName("label_crossover")
-        self.label_crossover.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
-
-        self.spin_crossover = QtWidgets.QDoubleSpinBox(self.groupBox)
-        self.spin_crossover.setGeometry(QtCore.QRect(230, 450, 55, 24))
-        self.spin_crossover.setMaximumSize(QtCore.QSize(55, 16777215))
-        self.spin_crossover.setStyleSheet("background-color: rgb(239, 240, 244);\n"
-                                          "border-color: rgb(147, 147, 147);\n"
-                                          "color: rgb(20, 21, 21);\n"
-                                          "selection-color: rgb(255, 255, 255);\n"
-                                          "selection-background-color: rgb(16, 81, 193);\n"
-                                          "border-radius: 5px;")
-        self.spin_crossover.setObjectName("spin_crossover")
-
-        self.spin_crossover.setDecimals(2)
-        self.spin_crossover.setRange(0.01, 0.99)
-        self.spin_crossover.setSingleStep(0.01)
 
         # ========================================
         #   Размер популяции
@@ -242,29 +214,6 @@ class UiMainWindow(object):
                                      "border-radius: 5px;")
 
         self.enter_max.setValidator(int_validator)
-
-        # ========================================
-        #   Количество случайных клеток
-        # ========================================
-        self.label_random = QtWidgets.QLabel(self.groupBox)
-        self.label_random.setGeometry(QtCore.QRect(20, 410, 200, 20))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        self.label_random.setFont(font)
-        self.label_random.setObjectName("label_random")
-        self.label_random.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
-
-        self.enter_n_random = QtWidgets.QLineEdit(self.groupBox)
-        self.enter_n_random.setGeometry(QtCore.QRect(240, 410, 40, 21))
-        self.enter_n_random.setObjectName("enter_n_random")
-        self.enter_n_random.setStyleSheet("background-color: rgb(239, 240, 244);\n"
-                                                   "border-color: rgb(147, 147, 147);\n"
-                                                   "color: rgb(20, 21, 21);\n"
-                                                   "selection-color: rgb(255, 255, 255);\n"
-                                                   "selection-background-color: rgb(16, 81, 193);\n"
-                                                   "border-radius: 5px;")
-
-        self.enter_n_random.setValidator(int_validator)
 
         # ========================================
         #   Таблица для ввода старта
@@ -364,7 +313,6 @@ class UiMainWindow(object):
         self.groupBox.setTitle(_translate("MainWindow", "Параметры"))
         self.start_btn.setText(_translate("MainWindow", "Старт"))
         self.label_mutation.setText(_translate("MainWindow", "Вероятность мутации"))
-        self.label_crossover.setText(_translate("MainWindow", "Вероятность скрещивания"))
         self.label_population.setText(_translate("MainWindow", "Размер популяции"))
         self.label_max.setText(_translate("MainWindow", "Макс. кол-во поколений"))
         self.label_f.setText(_translate("MainWindow", "Начальное поле"))
@@ -373,7 +321,6 @@ class UiMainWindow(object):
         self.download_btn.setText(_translate("MainWindow", "Загрузить файл"))
         self.to_end.setText(_translate("MainWindow", "⏩"))
         self.one_step.setText(_translate("MainWindow", "▶"))
-        self.label_random.setText(_translate("MainWindow", "Кол-во случайных клеток"))
 
     # ========================================
     #   Обработчик выбора строки
@@ -515,9 +462,7 @@ class UiMainWindow(object):
             self.one_step.setEnabled(False)
             self.download_btn.setEnabled(True)
             self.spin_mutation.setReadOnly(False)
-            self.spin_crossover.setReadOnly(False)
             self.enter_population_size.setReadOnly(False)
-            self.enter_n_random.setReadOnly(False)
             self.enter_max.setReadOnly(False)
             self.tablescreen.setEnabled(True)
             self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
@@ -542,7 +487,6 @@ class UiMainWindow(object):
             while not is_correct:
                 population_text = self.enter_population_size.text().strip()
                 generations_text = self.enter_max.text().strip()
-                n_random = self.enter_n_random.text().strip()
                 table = self.table_to_array(self.tablescreen)
 
                 if not generations_text:
@@ -551,14 +495,6 @@ class UiMainWindow(object):
 
                 if not population_text:
                     self.error_label.setText("Ошибка: Поле 'Размер популяции'\nне должно быть пустым.")
-                    return
-
-                if not n_random:
-                    self.error_label.setText("Ошибка: Поле 'Кол-во случайных клеток'\nне должно быть пустым.")
-                    return
-
-                if not (0 <= int(n_random) <= 81):
-                    self.error_label.setText("Ошибка: Поле 'Кол-во случайных клеток'\nдолжно быть в диапазоне 0-81.")
                     return
 
                 if not self.table_check(table):
@@ -585,9 +521,7 @@ class UiMainWindow(object):
             self.one_step.setEnabled(True)
             self.download_btn.setEnabled(False)
             self.spin_mutation.setReadOnly(True)
-            self.spin_crossover.setReadOnly(True)
             self.enter_population_size.setReadOnly(True)
-            self.enter_n_random.setReadOnly(True)
             self.enter_max.setReadOnly(True)
             self.tablescreen.setEnabled(False)
             self.to_end.setStyleSheet("QPushButton {background-color: rgb(239, 240, 244);"
