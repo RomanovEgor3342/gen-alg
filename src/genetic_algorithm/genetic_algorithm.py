@@ -241,10 +241,10 @@ class GeneticAlgorithm():
                 plot_progress(self.best_fitness_values)
                 return best
 
-            selected = self.group_tournament_selection(10)
+            selected = self.group_tournament_selection(2)
 
-            next_generation = population[:math.ceil(0.05 * len(population))]
-            # next_generation = []
+            # next_generation = population[:math.ceil(0.05 * len(population))]
+            next_generation = []
             while len(next_generation) < population_size:
                 parent1, parent2 = random.sample(selected, 2)
                 # child = self.uniform_crossover_cell(parent1, parent2)
@@ -320,14 +320,8 @@ def print_ind(ind):
     print('\n'.join([' '.join(list(map(str, ind[i]))) for i in range(9)]) + '\n')
 # ==========================
 def calculate_population_diversity(population: list[list[list[int]]]) -> float:
-    """
-    Вычисляет процент разнообразия в популяции судоку-решений.
-    
-    :param population: список особей, каждая из которых — 9x9 двумерный список.
-    :return: процент уникальных особей (diversity %) в популяции.
-    """
+
     def grid_to_hashable(grid):
-        # Преобразуем 2D-решётку в tuple of tuples для сравнения
         return tuple(tuple(row) for row in grid)
     
     unique_grids = set(grid_to_hashable(individual) for individual in population)
