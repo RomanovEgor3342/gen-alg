@@ -6,7 +6,6 @@ import math
 from data_saver import *
 from reader_writer import *
 from plot_drawing import *
-from new_crossing import *
 
 
 class GeneticAlgorithm():
