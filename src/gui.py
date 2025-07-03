@@ -1,18 +1,27 @@
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui
 from main import *
-from data_saver import *
 
 
-class Ui_MainWindow(object):
+class UiMainWindow(object):
     def __init__(self):
-        super().__init__()
-        self._is_paused = False
-        self._is_stopped = False
+        self.i = 0
+        self.best_fitness_values = []
+        self.field_creator = FieldCreator()
+        self.population_size = 0
+        self.population = self.field_creator.GeneratePopulation(10)
+        self.fixed_positions = 0
+        self.generations = 0
+        self.p_mutation = 0
+        self.is_start = False
 
+    def setup_ui(self, MainWindow):
 
-    def setupUi(self, MainWindow):
+        # ========================================
+        #   Настройки окна
+        # ========================================
+        self.MainWindow = MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(820, 660)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
@@ -24,33 +33,40 @@ class Ui_MainWindow(object):
         font.setBold(False)
         font.setWeight(50)
         MainWindow.setFont(font)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
         MainWindow.setStyleSheet("background-color: rgb(235, 236, 236);\n"
                                  "color: rgb(48, 48, 48);")
 
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
+        # ========================================
+        #   Окно вывода лучшего результата
+        # ========================================
+        self.label = QtWidgets.QLabel("Лучший результат", self.centralwidget)
+        self.label.setGeometry(QtCore.QRect(600, 30, 121, 16))
+        font = QtGui.QFont()
+        font.setPointSize(13)
+        self.label.setFont(font)
+        self.label.setObjectName("label")
+        self.label.setStyleSheet("background-color: rgb(255, 255, 255, 0);")
 
-        # --- Вывод лучшего результата ---
         self.screen = QtWidgets.QLabel(self.centralwidget)
         self.screen.setGeometry(QtCore.QRect(510, 10, 300, 300))
         font = QtGui.QFont()
         font.setPointSize(20)
         font.setUnderline(True)
         self.screen.setFont(font)
+        self.screen.setAlignment(QtCore.Qt.AlignCenter)
+        self.screen.setObjectName("screen")
         self.screen.setStyleSheet("border-color: rgb(220, 222, 221);\n"
                                   "background-color: rgb(230, 231, 231);\n"
                                   "color: rgb(99, 99, 99);\n"
                                   "border-radius: 10px;")
-        self.screen.setAlignment(QtCore.Qt.AlignCenter)
-        self.screen.setObjectName("screen")
 
-        # --- Таблица ---
+        # ========================================
+        #   Таблица результатов
+        # ========================================
         self.tableWidget = QtWidgets.QTableWidget(self.centralwidget)
         self.tableWidget.setGeometry(QtCore.QRect(310, 10, 190, 300))
-        self.tableWidget.setStyleSheet("border-color: rgb(220, 222, 221);\n"
-                                       "background-color: rgb(230, 231, 231);\n"
-                                       "color: rgb(27, 28, 28);\n"
-                                       "border-radius: 10px;")
         self.tableWidget.setColumnCount(2)
         self.tableWidget.setHorizontalHeaderLabels(["№", "Best fitness"])
         self.tableWidget.setColumnWidth(0, 60)
@@ -58,148 +74,113 @@ class Ui_MainWindow(object):
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tableWidget.setStyleSheet("border-color: rgb(220, 222, 221);\n"
+                                       "background-color: rgb(230, 231, 231);\n"
+                                       "color: rgb(27, 28, 28);\n"
+                                       "border-radius: 10px;")
 
-        # --- График ---
+        # ========================================
+        #   График
+        # ========================================
         self.graph = QtWidgets.QWidget()
-        self.graph.setParent(self.centralwidget)  # добавляем график на центральный виджет!
+        self.graph.setParent(self.centralwidget)
         self.graph.setGeometry(QtCore.QRect(310, 320, 500, 330))
+        self.graph_layout = QtWidgets.QVBoxLayout(self.graph)
         self.graph.setStyleSheet("border-color: rgb(220, 222, 221);\n"
                                  "background-color: rgb(230, 231, 231);\n"
                                  "color: rgb(27, 28, 28);\n"
                                  "border-radius: 10px;")
-        self.graph_layout = QtWidgets.QVBoxLayout(self.graph)
 
-        # --- Группа параметров ---
+        # ========================================
+        #   Группа параметров
+        # ========================================
         self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox.setGeometry(QtCore.QRect(0, 0, 300, 660))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        self.groupBox.setFont(font)
-        self.groupBox.setStyleSheet("background-color: rgb(228, 229, 229);\n"
-                                    "border-right-color: rgb(177, 179, 179);\n"
-                                    "color: rgb(48, 48, 48);")
-        self.groupBox.setTitle("Параметры")
+        self.groupBox.setMinimumSize(QtCore.QSize(300, 660))
         self.groupBox.setMaximumSize(QtCore.QSize(300, 660))
+        self.groupBox.setFont(font)
         font = QtGui.QFont()
         font.setPointSize(14)
         self.groupBox.setFont(font)
+        self.groupBox.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
+        self.groupBox.setObjectName("groupBox")
         self.groupBox.setStyleSheet("\n"
                                     "background-color: rgb(228, 229, 229);\n"
                                     "border-right-color: rgb(177, 179, 179);\n"
                                     "color: rgb(48, 48, 48);\n"
                                     "selection-color: rgb(255, 255, 255);\n"
                                     "selection-background-color: rgb(16, 81, 193);")
-        self.groupBox.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        self.groupBox.setObjectName("groupBox")
 
-        # --- Кнопка запуска ---
+        # ========================================
+        #   Кнопка запуска
+        # ========================================
         self.start_btn = QtWidgets.QPushButton(self.groupBox)
-        self.start_btn.setGeometry(QtCore.QRect(72, 610, 100, 30))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.start_btn.sizePolicy().hasHeightForWidth())
-        self.start_btn.setSizePolicy(sizePolicy)
-        self.start_btn.setMinimumSize(QtCore.QSize(100, 30))
-        self.start_btn.setMaximumSize(QtCore.QSize(100, 30))
+        self.start_btn.setGeometry(QtCore.QRect(45, 610, 100, 30))
         font = QtGui.QFont()
         font.setPointSize(14)
         self.start_btn.setFont(font)
-        self.start_btn.setStyleSheet("""
-            QPushButton {
-                background-color: rgb(239, 240, 244);
-                border-color: rgb(147, 147, 147);
-                color: rgb(20, 21, 21);
-                selection-color: rgb(255, 255, 255);
-                selection-background-color: rgb(16, 81, 193);
-                border-radius: 10px;
-            }
-            QPushButton:pressed {
-                background-color: rgb(200, 200, 200); /* более тёмный цвет для затемнения */
-            }
-        """)
         self.start_btn.setObjectName("start_btn")
+        self.start_btn.setStyleSheet("QPushButton {background-color: rgb(239, 240, 244);"
+                                     "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                     "selection-color: rgb(255, 255, 255);selection-background-color: rgb(16, 81, 193);"
+                                     "border-radius: 10px} QPushButton:pressed {background-color: rgb(200, 200, 200)}")
 
-        self.pushButton = QtWidgets.QPushButton(self.groupBox)
-        self.pushButton.setGeometry(QtCore.QRect(178, 610, 50, 30))
-        self.pushButton.setMinimumSize(QtCore.QSize(50, 30))
-        self.pushButton.setMaximumSize(QtCore.QSize(50, 30))
-        self.pushButton.setStyleSheet("""
-            QPushButton {
-                background-color: rgb(239, 240, 244);
-                border-color: rgb(147, 147, 147);
-                color: rgb(20, 21, 21);
-                selection-color: rgb(255, 255, 255);
-                selection-background-color: rgb(16, 81, 193);
-                border-radius: 10px;
-            }
-            QPushButton:pressed {
-                background-color: rgb(200, 200, 200); /* более тёмный цвет для затемнения */
-            }
-        """)
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton_2 = QtWidgets.QPushButton(self.groupBox)
-        self.pushButton_2.setGeometry(QtCore.QRect(233, 610, 30, 30))
-        self.pushButton_2.setMinimumSize(QtCore.QSize(30, 30))
-        self.pushButton_2.setMaximumSize(QtCore.QSize(30, 30))
+        # ========================================
+        #   Кнопка загрузить
+        # ========================================
+        self.download_btn = QtWidgets.QPushButton(self.groupBox)
+        self.download_btn.setGeometry(QtCore.QRect(90, 290, 120, 20))
         font = QtGui.QFont()
-        font.setPointSize(16)
-        font.setBold(False)
-        font.setWeight(50)
-        self.pushButton_2.setFont(font)
-        self.pushButton_2.setStyleSheet("""
-            QPushButton {
-                background-color: rgb(239, 240, 244);
-                border-color: rgb(147, 147, 147);
-                color: rgb(20, 21, 21);
-                selection-color: rgb(255, 255, 255);
-                selection-background-color: rgb(16, 81, 193);
-                border-radius: 10px;
-            }
-            QPushButton:pressed {
-                background-color: rgb(200, 200, 200); /* более тёмный цвет для затемнения */
-            }
-        """)
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.pushButton_3 = QtWidgets.QPushButton(self.groupBox)
-        self.pushButton_3.setGeometry(QtCore.QRect(37, 610, 30, 30))
-        self.pushButton_3.setMinimumSize(QtCore.QSize(30, 30))
-        self.pushButton_3.setMaximumSize(QtCore.QSize(30, 30))
-        font = QtGui.QFont()
-        font.setPointSize(16)
-        font.setBold(False)
-        font.setWeight(50)
-        self.pushButton_3.setFont(font)
-        self.pushButton_3.setStyleSheet("""
-            QPushButton {
-                background-color: rgb(239, 240, 244);
-                border-color: rgb(147, 147, 147);
-                color: rgb(20, 21, 21);
-                selection-color: rgb(255, 255, 255);
-                selection-background-color: rgb(16, 81, 193);
-                border-radius: 10px;
-            }
-            QPushButton:pressed {
-                background-color: rgb(200, 200, 200); /* более тёмный цвет для затемнения */
-            }
-        """)
-        self.pushButton_3.setObjectName("pushButton_3")
+        font.setPointSize(14)
+        self.download_btn.setFont(font)
+        self.download_btn.setObjectName("download_btn")
+        self.download_btn.setStyleSheet("QPushButton {background-color: rgb(239, 240, 244);"
+                                        "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                        "selection-color: rgb(255, 255, 255);"
+                                        "selection-background-color: rgb(16, 81, 193);"
+                                        "border-radius: 10px}"
+                                        "QPushButton:pressed {background-color: rgb(200, 200, 200)}")
 
-        # --- Кнопка ---
+        # ========================================
+        #   Вероятность мутации
+        # ========================================
+        self.label_mutation = QtWidgets.QLabel(self.groupBox)
+        self.label_mutation.setGeometry(QtCore.QRect(20, 490, 200, 20))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_mutation.setFont(font)
+        self.label_mutation.setObjectName("label_mutation")
+        self.label_mutation.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+
         self.spin_mutation = QtWidgets.QDoubleSpinBox(self.groupBox)
-        self.spin_mutation.setGeometry(QtCore.QRect(230, 460, 55, 24))
-        self.spin_mutation.setMaximumSize(QtCore.QSize(55, 16777215))
+        self.spin_mutation.setGeometry(QtCore.QRect(230, 490, 55, 24))
+        self.spin_mutation.setObjectName("spin_mutation")
         self.spin_mutation.setStyleSheet("background-color: rgb(239, 240, 244);\n"
                                          "border-color: rgb(147, 147, 147);\n"
                                          "color: rgb(20, 21, 21);\n"
                                          "selection-color: rgb(255, 255, 255);\n"
                                          "selection-background-color: rgb(16, 81, 193);\n"
                                          "border-radius: 5px;")
-        self.spin_mutation.setObjectName("spin_mutation")
 
-        # --- Кнопка ---
+        self.spin_mutation.setDecimals(2)
+        self.spin_mutation.setRange(0.01, 0.99)
+        self.spin_mutation.setSingleStep(0.01)
+
+        # ========================================
+        #   Вероятность скрещивания
+        # ========================================
+        self.label_crossover = QtWidgets.QLabel(self.groupBox)
+        self.label_crossover.setGeometry(QtCore.QRect(20, 450, 200, 20))
+        self.label_crossover.setMinimumSize(QtCore.QSize(200, 20))
+        self.label_crossover.setMaximumSize(QtCore.QSize(200, 20))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_crossover.setFont(font)
+        self.label_crossover.setObjectName("label_crossover")
+        self.label_crossover.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+
         self.spin_crossover = QtWidgets.QDoubleSpinBox(self.groupBox)
-        self.spin_crossover.setGeometry(QtCore.QRect(230, 420, 55, 24))
+        self.spin_crossover.setGeometry(QtCore.QRect(230, 450, 55, 24))
         self.spin_crossover.setMaximumSize(QtCore.QSize(55, 16777215))
         self.spin_crossover.setStyleSheet("background-color: rgb(239, 240, 244);\n"
                                           "border-color: rgb(147, 147, 147);\n"
@@ -209,109 +190,97 @@ class Ui_MainWindow(object):
                                           "border-radius: 5px;")
         self.spin_crossover.setObjectName("spin_crossover")
 
-        # Настройки для spin_mutation
-        self.spin_mutation.setDecimals(2)
-        self.spin_mutation.setRange(0.01, 0.99)
-        self.spin_mutation.setSingleStep(0.01)
-
-        # Настройки для spin_crossover
         self.spin_crossover.setDecimals(2)
         self.spin_crossover.setRange(0.01, 0.99)
         self.spin_crossover.setSingleStep(0.01)
 
-        self.label_mutation = QtWidgets.QLabel(self.groupBox)
-        self.label_mutation.setGeometry(QtCore.QRect(20, 460, 200, 20))
-        self.label_mutation.setMinimumSize(QtCore.QSize(200, 20))
-        self.label_mutation.setMaximumSize(QtCore.QSize(200, 20))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        self.label_mutation.setFont(font)
-        self.label_mutation.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
-        self.label_mutation.setObjectName("label_mutation")
-
-        self.label_crossover = QtWidgets.QLabel(self.groupBox)
-        self.label_crossover.setGeometry(QtCore.QRect(20, 420, 200, 20))
-        self.label_crossover.setMinimumSize(QtCore.QSize(200, 20))
-        self.label_crossover.setMaximumSize(QtCore.QSize(200, 20))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        self.label_crossover.setFont(font)
-        self.label_crossover.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
-        self.label_crossover.setObjectName("label_crossover")
-
+        # ========================================
+        #   Размер популяции
+        # ========================================
         self.label_population = QtWidgets.QLabel(self.groupBox)
-        self.label_population.setGeometry(QtCore.QRect(20, 340, 200, 20))
-        self.label_population.setMinimumSize(QtCore.QSize(200, 20))
-        self.label_population.setMaximumSize(QtCore.QSize(200, 20))
+        self.label_population.setGeometry(QtCore.QRect(20, 370, 200, 20))
         font = QtGui.QFont()
         font.setPointSize(14)
         self.label_population.setFont(font)
-        self.label_population.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
         self.label_population.setObjectName("label_population")
-
-        self.label_max = QtWidgets.QLabel(self.groupBox)
-        self.label_max.setGeometry(QtCore.QRect(20, 300, 200, 20))
-        self.label_max.setMinimumSize(QtCore.QSize(200, 20))
-        self.label_max.setMaximumSize(QtCore.QSize(200, 20))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        self.label_max.setFont(font)
-        self.label_max.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
-        self.label_max.setObjectName("label_max")
+        self.label_population.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
 
         self.enter_population_size = QtWidgets.QLineEdit(self.groupBox)
-        self.enter_population_size.setGeometry(QtCore.QRect(240, 340, 40, 21))
-        self.enter_population_size.setMaximumSize(QtCore.QSize(40, 16777215))
+        self.enter_population_size.setGeometry(QtCore.QRect(240, 370, 40, 21))
+        self.enter_population_size.setObjectName("enter_population_size")
         self.enter_population_size.setStyleSheet("background-color: rgb(239, 240, 244);\n"
                                                  "border-color: rgb(147, 147, 147);\n"
                                                  "color: rgb(20, 21, 21);\n"
                                                  "selection-color: rgb(255, 255, 255);\n"
                                                  "selection-background-color: rgb(16, 81, 193);\n"
                                                  "border-radius: 5px;")
-        self.enter_population_size.setObjectName("enter_population_size")
+
+        int_validator = QtGui.QIntValidator(0, 10000)
+        self.enter_population_size.setValidator(int_validator)
+
+        # ========================================
+        #   Макс. кол-во поколений
+        # ========================================
+        self.label_max = QtWidgets.QLabel(self.groupBox)
+        self.label_max.setGeometry(QtCore.QRect(20, 330, 200, 20))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_max.setFont(font)
+        self.label_max.setObjectName("label_max")
+        self.label_max.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
 
         self.enter_max = QtWidgets.QLineEdit(self.groupBox)
-        self.enter_max.setGeometry(QtCore.QRect(240, 300, 40, 21))
-        self.enter_max.setMaximumSize(QtCore.QSize(40, 16777215))
+        self.enter_max.setGeometry(QtCore.QRect(240, 330, 40, 21))
+        self.enter_max.setObjectName("enter_max")
         self.enter_max.setStyleSheet("background-color: rgb(239, 240, 244);\n"
                                      "border-color: rgb(147, 147, 147);\n"
                                      "color: rgb(20, 21, 21);\n"
                                      "selection-color: rgb(255, 255, 255);\n"
                                      "selection-background-color: rgb(16, 81, 193);\n"
                                      "border-radius: 5px;")
-        self.enter_max.setObjectName("enter_max")
 
-        self.label_population_2 = QtWidgets.QLabel(self.groupBox)
-        self.label_population_2.setGeometry(QtCore.QRect(20, 380, 200, 20))
-        self.label_population_2.setMinimumSize(QtCore.QSize(200, 20))
-        self.label_population_2.setMaximumSize(QtCore.QSize(200, 20))
+        self.enter_max.setValidator(int_validator)
+
+        # ========================================
+        #   Количество случайных клеток
+        # ========================================
+        self.label_random = QtWidgets.QLabel(self.groupBox)
+        self.label_random.setGeometry(QtCore.QRect(20, 410, 200, 20))
         font = QtGui.QFont()
         font.setPointSize(14)
-        self.label_population_2.setFont(font)
-        self.label_population_2.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
-        self.label_population_2.setObjectName("label_population_2")
-        self.enter_population_size_2 = QtWidgets.QLineEdit(self.groupBox)
-        self.enter_population_size_2.setGeometry(QtCore.QRect(240, 380, 40, 21))
-        self.enter_population_size_2.setMaximumSize(QtCore.QSize(40, 16777215))
-        self.enter_population_size_2.setStyleSheet("background-color: rgb(239, 240, 244);\n"
+        self.label_random.setFont(font)
+        self.label_random.setObjectName("label_random")
+        self.label_random.setStyleSheet("background-color: rgba(255, 255, 255, 0);")
+
+        self.enter_n_random = QtWidgets.QLineEdit(self.groupBox)
+        self.enter_n_random.setGeometry(QtCore.QRect(240, 410, 40, 21))
+        self.enter_n_random.setObjectName("enter_n_random")
+        self.enter_n_random.setStyleSheet("background-color: rgb(239, 240, 244);\n"
                                                    "border-color: rgb(147, 147, 147);\n"
                                                    "color: rgb(20, 21, 21);\n"
                                                    "selection-color: rgb(255, 255, 255);\n"
                                                    "selection-background-color: rgb(16, 81, 193);\n"
                                                    "border-radius: 5px;")
-        self.enter_population_size_2.setObjectName("enter_population_size_2")
 
-        # Ограничение ввода только чисел от 0 до 10000
-        int_validator = QtGui.QIntValidator(0, 10000)
-        self.enter_population_size.setValidator(int_validator)
-        self.enter_max.setValidator(int_validator)
-        self.enter_population_size_2.setValidator(int_validator)
+        self.enter_n_random.setValidator(int_validator)
+
+        # ========================================
+        #   Таблица для ввода старта
+        # ========================================
+        self.label_f = QtWidgets.QLabel(self.groupBox)
+        self.label_f.setGeometry(QtCore.QRect(90, 30, 110, 16))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.label_f.setFont(font)
+        self.label_f.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_f.setObjectName("label_f")
+        self.label_f.setStyleSheet("background-color: rgba(255, 255, 255, 0);\n"
+                                   "color: rgb(48, 48, 48);")
 
         self.tablescreen = QtWidgets.QTableWidget(self.groupBox)
         self.tablescreen.setGeometry(QtCore.QRect(40, 60, 220, 220))
-        self.tablescreen.setMinimumSize(QtCore.QSize(220, 220))
-        self.tablescreen.setMaximumSize(QtCore.QSize(220, 220))
         self.tablescreen.setObjectName("tablescreen")
+
         rows, cols = 9, 9
         self.tablescreen.setRowCount(rows)
         self.tablescreen.setColumnCount(cols)
@@ -325,22 +294,16 @@ class Ui_MainWindow(object):
                 item = QtWidgets.QTableWidgetItem("x")
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.tablescreen.setItem(i, j, item)
+
         self.tablescreen.horizontalHeader().setVisible(False)
         self.tablescreen.verticalHeader().setVisible(False)
         self.tablescreen.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
 
-        self.label_f = QtWidgets.QLabel(self.groupBox)
-        self.label_f.setGeometry(QtCore.QRect(90, 30, 110, 16))
-        font = QtGui.QFont()
-        font.setPointSize(14)
-        self.label_f.setFont(font)
-        self.label_f.setStyleSheet("background-color: rgba(255, 255, 255, 0);\n"
-                                   "color: rgb(48, 48, 48);")
-        self.label_f.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_f.setObjectName("label_f")
-
+        # ========================================
+        #   Вывод ошибки
+        # ========================================
         self.error_label = QtWidgets.QLabel(self.groupBox)
-        self.error_label.setGeometry(QtCore.QRect(0, 570, 300, 40))
+        self.error_label.setGeometry(QtCore.QRect(0, 560, 300, 41))
         font = QtGui.QFont()
         font.setPointSize(14)
         self.error_label.setFont(font)
@@ -348,24 +311,71 @@ class Ui_MainWindow(object):
         self.error_label.setAlignment(QtCore.Qt.AlignCenter)
         self.error_label.setObjectName("error_label")
 
-        # --- Подпись к результату ---
-        self.label = QtWidgets.QLabel("Лучший результат", self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(600, 30, 121, 16))
-        self.label.setStyleSheet("background-color: rgb(0, 0, 0, 0);")
+        # ========================================
+        #   Кнопка включить до результата
+        # ========================================
+        self.to_end = QtWidgets.QPushButton(self.groupBox)
+        self.to_end.setGeometry(QtCore.QRect(150, 610, 70, 30))
         font = QtGui.QFont()
-        font.setPointSize(13)
-        self.label.setFont(font)
-        self.label.setObjectName("label")
+        font.setPointSize(25)
+        self.to_end.setFont(font)
+        self.to_end.setObjectName("to_end")
+        self.to_end.setEnabled(False)
+        self.to_end.setStyleSheet("QPushButton {background-color: rgb(187, 188, 188);"
+                                  "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                  "selection-color: rgb(255, 255, 255);"
+                                  "selection-background-color: rgb(16, 81, 193);"
+                                  "border-radius: 10px}")
 
+        # ========================================
+        #   Кнопка один шаг
+        # ========================================
+        self.one_step = QtWidgets.QPushButton(self.groupBox)
+        self.one_step.setGeometry(QtCore.QRect(225, 610, 30, 30))
+        font = QtGui.QFont()
+        font.setPointSize(17)
+        font.setBold(False)
+        font.setWeight(50)
+        self.one_step.setFont(font)
+        self.one_step.setObjectName("one_step")
+        self.one_step.setEnabled(False)
+        self.one_step.setStyleSheet("QPushButton {background-color: rgb(187, 188, 188);"
+                                    "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                    "selection-color: rgb(255, 255, 255);"
+                                    "selection-background-color: rgb(16, 81, 193);"
+                                    "border-radius: 10px}")
+
+        # ========================================
+        #   Обработчики
+        # ========================================
         MainWindow.setCentralWidget(self.centralwidget)
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-        # Подключение обработчиков
         self.functions()
 
-    # --- Обработчик выбора строки ---
+    # ========================================
+    #   Перевод интерфейса
+    # ========================================
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "ГА Судоку"))
+        self.groupBox.setTitle(_translate("MainWindow", "Параметры"))
+        self.start_btn.setText(_translate("MainWindow", "Старт"))
+        self.label_mutation.setText(_translate("MainWindow", "Вероятность мутации"))
+        self.label_crossover.setText(_translate("MainWindow", "Вероятность скрещивания"))
+        self.label_population.setText(_translate("MainWindow", "Размер популяции"))
+        self.label_max.setText(_translate("MainWindow", "Макс. кол-во поколений"))
+        self.label_f.setText(_translate("MainWindow", "Начальное поле"))
+        self.error_label.setText(_translate("MainWindow", ""))
+        self.label.setText(_translate("MainWindow", "Лучший результат"))
+        self.download_btn.setText(_translate("MainWindow", "Загрузить файл"))
+        self.to_end.setText(_translate("MainWindow", "⏩"))
+        self.one_step.setText(_translate("MainWindow", "▶"))
+        self.label_random.setText(_translate("MainWindow", "Кол-во случайных клеток"))
+
+    # ========================================
+    #   Обработчик выбора строки
+    # ========================================
     def on_row_clicked(self):
         row = self.tableWidget.currentRow()
         key = self.tableWidget.item(row, 0).text()
@@ -374,10 +384,12 @@ class Ui_MainWindow(object):
         print(self.data.get('best_fitness')[:int(key)])
         self.plot_graph(self.data.get('best_fitness')[:int(key)])
 
-    # --- Обновить таблицу ---
+    # ========================================
+    #   Обновление таблицы
+    # ========================================
     def update_table(self):
         self.data = read_data()
-        keys = list(self.data.keys())[1:]  # пропустить первый элемент
+        keys = list(self.data.keys())[1:]
         self.tableWidget.setRowCount(len(keys))
         for row, key in enumerate(keys):
             value = self.data[key]
@@ -388,14 +400,29 @@ class Ui_MainWindow(object):
             self.tableWidget.setItem(row, 0, item1)
             self.tableWidget.setItem(row, 1, item2)
 
-    # --- Отрисовщик графика ---
+    # ========================================
+    #   Обновление экрана результата
+    # ========================================
+    def update_screen(self, array):
+        for i in range(9):
+            for j in range(9):
+                item = QtWidgets.QTableWidgetItem(array[i][j])
+                self.tablescreen.setItem(i, j, item)
+
+    # ========================================
+    #   Отрисовщик графика
+    # ========================================
     def plot_graph(self, fitness_values):
         if hasattr(self, 'canvas'):
             self.graph_layout.removeWidget(self.canvas)
             self.canvas.setParent(None)
+
         figure = Figure(figsize=(10, 5), tight_layout=True)
+        figure.patch.set_facecolor((224 / 255, 225 / 255, 225 / 255))
         self.canvas = FigureCanvas(figure)
         ax = figure.add_subplot(111)
+        ax.set_facecolor((224 / 255, 225 / 255, 225 / 255))
+
         ax.plot(fitness_values, label='Best Fitness')
         ax.set_xlabel("Generation")
         ax.set_ylabel("Fitness")
@@ -405,6 +432,9 @@ class Ui_MainWindow(object):
 
         self.graph_layout.addWidget(self.canvas)
 
+    # ========================================
+    #   Таблица в массив
+    # ========================================
     def table_to_array(self, table: QtWidgets.QTableWidget) -> list:
         rows = table.rowCount()
         cols = table.columnCount()
@@ -420,40 +450,247 @@ class Ui_MainWindow(object):
 
         return data
 
-    # --- Перевод интерфейса ---
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "ГА Судоку"))
-        self.groupBox.setTitle(_translate("MainWindow", "Параметры"))
-        self.start_btn.setText(_translate("MainWindow", "Запуск"))
-        self.label_mutation.setText(_translate("MainWindow", "Вероятность мутации"))
-        self.label_crossover.setText(_translate("MainWindow", "Вероятность скрещивания"))
-        self.label_population.setText(_translate("MainWindow", "Размер популяции"))
-        self.label_max.setText(_translate("MainWindow", "Макс. кол-во поколений"))
-        self.label_f.setText(_translate("MainWindow", "Начальное поле"))
-        self.error_label.setText(_translate("MainWindow", ""))
-        self.label.setText(_translate("MainWindow", "Лучший результат"))
-        self.pushButton.setText(_translate("MainWindow", "Стоп"))
-        self.pushButton_2.setText(_translate("MainWindow", "ᐅ"))
-        self.label_population_2.setText(_translate("MainWindow", "Кол-во случайных клеток"))
-        self.pushButton_3.setText(_translate("MainWindow", "ᐊ"))
+    # ========================================
+    #   Открыть файл
+    # ========================================
+    def open_txt_file(self):
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(self.MainWindow, "Выберите текстовый файл", "",
+                                                             "Text Files (*.txt)")
+        if file_name:
+            try:
+                with open(file_name, "r", encoding="utf-8") as f:
+                    text = f.read()
+                if self.file_check(text) and self.table_check([item.split(' ') for item in text.split('\n')]):
+                    self.error_label.setText("")
+                    self.update_screen([item.split(' ') for item in text.split('\n')])
+                else:
+                    self.error_label.setText("Ошибка: Неверный формат поля")
 
-    # --- Обработчик функций ---
+            except Exception as e:
+                QtWidgets.QMessageBox.warning(self.MainWindow, "Ошибка", f"Не удалось прочитать файл:\n{str(e)}")
+
+    # ========================================
+    #   Проверка поля
+    # ========================================
+    def table_check(self, table):
+        for i in range(9):
+            for j in range(9):
+                if not table[i][j].isdigit() and not table[i][j] == 'x':
+                    return False
+        return True
+
+    def file_check(self, text: str) -> bool:
+        lines = text.strip().splitlines()
+
+        if len(lines) != 9:
+            return False
+
+        for i, line in enumerate(lines):
+            parts = line.strip().split()
+            if len(parts) != 9:
+                return False
+        return True
+
+    # ========================================
+    #   Обработчик функций
+    # ========================================
     def functions(self):
         self.tableWidget.clicked.connect(lambda: self.on_row_clicked())
-        self.start_btn.clicked.connect(lambda: self.start())
+        self.start_btn.clicked.connect(self.start)
+        self.one_step.clicked.connect(self.start_one)
+        self.to_end.clicked.connect(self.start_until_the_end)
+        self.download_btn.clicked.connect(self.open_txt_file)
 
+    # ========================================
+    #   Подтверждение данных
+    # ========================================
     def start(self):
-        print("Программа запущена")
-        array = self.table_to_array(self.tablescreen)
-        main_start(array, int(self.enter_population_size.text()), int(self.enter_max.text()), float(self.spin_mutation.text().replace(',', '.')))
+        if self.is_start:
+            print("Программа остановлена")
+            self.start_btn.setText("Старт")
+            clean_data()
+            self.to_end.setEnabled(False)
+            self.one_step.setEnabled(False)
+            self.download_btn.setEnabled(True)
+            self.spin_mutation.setReadOnly(False)
+            self.spin_crossover.setReadOnly(False)
+            self.enter_population_size.setReadOnly(False)
+            self.enter_n_random.setReadOnly(False)
+            self.enter_max.setReadOnly(False)
+            self.tablescreen.setEnabled(True)
+            self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                      "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                      "selection-color: rgb(255, 255, 255);"
+                                      "selection-background-color: rgb(16, 81, 193);"
+                                      "border-radius: 10px")
+            self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                        "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                        "selection-color: rgb(255, 255, 255);"
+                                        "selection-background-color: rgb(16, 81, 193);"
+                                        "border-radius: 10px")
+            self.download_btn.setStyleSheet("background-color: rgb(239, 240, 244);"
+                                            "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                            "selection-color: rgb(255, 255, 255);"
+                                            "selection-background-color: rgb(16, 81, 193);"
+                                            "border-radius: 10px")
+            self.is_start = False
+        else:
+            is_correct = False
+
+            while not is_correct:
+                population_text = self.enter_population_size.text().strip()
+                generations_text = self.enter_max.text().strip()
+                n_random = self.enter_n_random.text().strip()
+                table = self.table_to_array(self.tablescreen)
+
+                if not generations_text:
+                    self.error_label.setText("Ошибка: Поле 'Макс. поколений'\nне должно быть пустым.")
+                    return
+
+                if not population_text:
+                    self.error_label.setText("Ошибка: Поле 'Размер популяции'\nне должно быть пустым.")
+                    return
+
+                if not n_random:
+                    self.error_label.setText("Ошибка: Поле 'Кол-во случайных клеток'\nне должно быть пустым.")
+                    return
+
+                if not (0 <= int(n_random) <= 81):
+                    self.error_label.setText("Ошибка: Поле 'Кол-во случайных клеток'\nдолжно быть в диапазоне 0-81.")
+                    return
+
+                if not self.table_check(table):
+                    self.error_label.setText("Ошибка: Неверно задано поле")
+                    return
+
+                is_correct = True
+
+
+            print("Программа запущена")
+            self.error_label.setText("")
+            self.start_btn.setText("Стоп")
+            clean_data()
+            data_init()
+            self.i = 0
+            self.best_fitness_values = []
+            self.field_creator.ReadFromList(self.table_to_array(self.tablescreen))
+            self.population_size = int(self.enter_population_size.text())
+            self.population = self.field_creator.GeneratePopulation(self.population_size)
+            self.fixed_positions = self.field_creator.insert_list_indexes
+            self.generations = int(self.enter_max.text())
+            self.p_mutation = float(self.spin_mutation.text().replace(',', '.'))
+            self.update_table()
+            self.to_end.setEnabled(True)
+            self.one_step.setEnabled(True)
+            self.download_btn.setEnabled(False)
+            self.spin_mutation.setReadOnly(True)
+            self.spin_crossover.setReadOnly(True)
+            self.enter_population_size.setReadOnly(True)
+            self.enter_n_random.setReadOnly(True)
+            self.enter_max.setReadOnly(True)
+            self.tablescreen.setEnabled(False)
+            self.to_end.setStyleSheet("QPushButton {background-color: rgb(239, 240, 244);"
+                                      "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                      "selection-color: rgb(255, 255, 255);"
+                                      "selection-background-color: rgb(16, 81, 193);"
+                                      "border-radius: 10px} QPushButton:pressed {background-color: rgb(200, 200, 200)}")
+            self.one_step.setStyleSheet("QPushButton {background-color: rgb(239, 240, 244);"
+                                        "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                        "selection-color: rgb(255, 255, 255);"
+                                        "selection-background-color: rgb(16, 81, 193);"
+                                        "border-radius: 10px}"
+                                        "QPushButton:pressed {background-color: rgb(200, 200, 200)}")
+            self.download_btn.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                            "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                            "selection-color: rgb(255, 255, 255);"
+                                            "selection-background-color: rgb(16, 81, 193);"
+                                            "border-radius: 10px")
+            self.is_start = True
+
+    # ========================================
+    #   Один шаг
+    # ========================================
+    def start_one(self):
+        self.i += 1
+        self.one_iter()
         self.update_table()
+        if self.best_fitness_values[-1] == 243:
+            print("Sudoku solved!")
+            self.to_end.setEnabled(False)
+            self.one_step.setEnabled(False)
+            self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                      "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                      "selection-color: rgb(255, 255, 255);"
+                                      "selection-background-color: rgb(16, 81, 193);"
+                                      "border-radius: 10px")
+            self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                        "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                        "selection-color: rgb(255, 255, 255);"
+                                        "selection-background-color: rgb(16, 81, 193);"
+                                        "border-radius: 10px")
+
+    # ========================================
+    #   До результата
+    # ========================================
+    def start_until_the_end(self):
+        for generation in range(self.i, self.generations):
+            self.one_iter(generation)
+            print(f"Generation {self.i + generation}, Best fitness: {self.best_fitness_values[-1]}")
+            if self.best_fitness_values[-1] == 243:
+                self.i += generation
+                print("Sudoku solved!")
+                self.to_end.setEnabled(False)
+                self.one_step.setEnabled(False)
+                self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                          "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                          "selection-color: rgb(255, 255, 255);"
+                                          "selection-background-color: rgb(16, 81, 193);"
+                                          "border-radius: 10px")
+                self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                            "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                            "selection-color: rgb(255, 255, 255);"
+                                            "selection-background-color: rgb(16, 81, 193);"
+                                            "border-radius: 10px")
+                self.update_table()
+                break
+        self.update_table()
+
+    # ========================================
+    #   Одна итерация
+    # ========================================
+    def one_iter(self, generation = 0):
+        population = sorted(self.population, key=fitness_full, reverse=True)
+        best = population[0]
+        best_fitness = fitness_full(best)
+        self.best_fitness_values.append(best_fitness)
+
+        # Сохранение данных о поколении
+        data = [best_fitness, field_to_str(best)]
+        save_data(self.i + generation, data)
+
+        if best_fitness == 243:
+            return best
+
+        selected = group_tournament_selection(population)
+
+        next_generation = []
+        while len(next_generation) < self.population_size:
+            parent1, parent2 = random.sample(selected, 2)
+            child = one_point_crossing_sq(parent1, parent2, self.fixed_positions)
+
+            if random.random() < self.p_mutation:
+                random_mutation(child, self.fixed_positions)
+
+            next_generation.append(child)
+
+        self.population = next_generation
+
 
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
+    ui = UiMainWindow()
+    ui.setup_ui(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
