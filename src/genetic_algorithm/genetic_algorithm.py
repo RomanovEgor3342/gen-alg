@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from typing import overload, Literal, Union
+import math
 
 from data_saver import *
 from reader_writer import *
@@ -127,6 +128,18 @@ class GeneticAlgorithm():
                             child[x][y] = source[x][y]
 
         return child
+
+    def uniform_crossover_cell(self, parent1, parent2):
+        child = [row.copy() for row in parent1] 
+
+        for i in range(9):
+            for j in range(9):
+                if (i, j) in self.insert_list_indexes:
+                    continue 
+                
+                child[i][j] = parent1[i][j] if random.random() < 0.5 else parent2[i][j]
+
+        return child
     # ==========================
 
     # ========================== mutation
@@ -146,10 +159,24 @@ class GeneticAlgorithm():
         second_y = second_sum % 9
 
         entity[first_x][first_y], entity[second_x][second_y] = entity[second_x][second_y], entity[first_x][first_y]
+
+    def row_shuffle_mutation(self, entity: list[list[int]]) -> None:
+        fixed_set = set(self.insert_list_indexes)
+        row_idx = random.randint(0, 8)
+        mutable_indices = [j for j in range(9) if (row_idx, j) not in fixed_set]
+        
+        if len(mutable_indices) < 2:
+            return
+        
+        values_to_shuffle = [entity[row_idx][j] for j in mutable_indices]
+        random.shuffle(values_to_shuffle)
+        
+        for idx, j in enumerate(mutable_indices):
+            entity[row_idx][j] = values_to_shuffle[idx]
     # ==========================
 
     # ========================== main cycle
-    def main_cycle(self, generations=10000, population_size=100, mutation_rate=0.3):
+    def main_cycle(self, generations, population_size, mutation_rate):
         best_fitness_values = []
         data_init()
 
@@ -169,15 +196,25 @@ class GeneticAlgorithm():
                 plot_progress(best_fitness_values)
                 return best
 
-            selected = self.group_tournament_selection()
+            selected = self.group_tournament_selection(3)
 
+            # next_generation = population[:math.ceil(0.05 * len(population))]
             next_generation = []
             while len(next_generation) < population_size:
                 parent1, parent2 = random.sample(selected, 2)
-                child = self.one_point_crossing_sq(parent1, parent2)
+                child = self.uniform_crossover_cell(parent1, parent2)
+                # child = []
+                # if random.random() < crossover_rate:
+                # child = self.one_point_crossing_sq(parent1, parent2)
+
+                # else:
+                #     next_generation.append(parent1)
+                #     next_generation.append(parent2)
+                #     continue
 
                 if (random_number := random.random()) < mutation_rate:
-                    self.random_mutation(child)
+                    self.row_shuffle_mutation(child)
+                    # self.random_mutation(child)
 
                     # if len(get_bad_rows(child)) > 0:
                     #     mutation_among_bad_rows(child, fixed_positions, get_bad_rows(child), True)
@@ -227,11 +264,11 @@ def print_ind(ind):
 
 if __name__ == "__main__":
     gen_alg = GeneticAlgorithm()
-    gen_alg.insert_list_indexes =[(1, 1), (5, 6), (2, 8)]
+    # gen_alg.insert_list_indexes =[(1, 1), (5, 6), (2, 8)]
     gen_alg.get_data('example.txt', 'f')
     gen_alg.GeneratePopulation(500)
 
-    solution = gen_alg.main_cycle( 10000, 500, 0.3)
+    solution = gen_alg.main_cycle( 10000, 500, 0.55)
 
     print(gen_alg.fitness_full(solution))
     print_ind(solution)
