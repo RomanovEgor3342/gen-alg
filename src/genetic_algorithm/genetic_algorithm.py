@@ -6,6 +6,7 @@ import math
 from data_saver import *
 from reader_writer import *
 from plot_drawing import *
+from new_crossing import *
 
 
 class GeneticAlgorithm():
@@ -14,6 +15,7 @@ class GeneticAlgorithm():
         self.insert_list_indexes = []
         self.insert_list_symbols = []
         self.population = []
+        self.best_fitness_values = []
 
     # ========================== getting data
     @overload
@@ -140,6 +142,31 @@ class GeneticAlgorithm():
                 child[i][j] = parent1[i][j] if random.random() < 0.5 else parent2[i][j]
 
         return child
+
+    def uniform_crossover_row(self, parent1: list[list[int]], parent2:list[list[int]]) -> list[list[int]]:
+        child = [row.copy() for row in parent1]
+        for row in range(9):
+            if random.random() < 0.5:
+                for column in range(9):
+                    child[row][column] = parent1[row][column]
+            else:
+                for column in range(9):
+                    child[row][column] = parent2[row][column]
+
+        return child
+
+
+    def uniform_crossover_column(self, parent1: list[list[int]], parent2: list[list[int]]) -> list[list[int]]:
+        child = [row.copy() for row in parent1]
+        for column in range(9):
+            if random.random() < 0.5:
+                for row in range(9):
+                    child[row][column] = parent1[row][column]
+            else:
+                for row in range(9):
+                    child[row][column] = parent2[row][column]
+
+        return child
     # ==========================
 
     # ========================== mutation
@@ -173,36 +200,54 @@ class GeneticAlgorithm():
         
         for idx, j in enumerate(mutable_indices):
             entity[row_idx][j] = values_to_shuffle[idx]
+
+    def mutation_change_5_percent(self, entity: list[list[int]]) -> None:
+        fixed_set = set(self.insert_list_indexes)
+
+        mutable_positions = [(i, j) for i in range(9) for j in range(9) if (i, j) not in fixed_set]
+        
+        if not mutable_positions:
+            return
+
+        num_to_mutate = max(1, round(0.05 * len(mutable_positions)))
+
+        positions_to_mutate = random.sample(mutable_positions, num_to_mutate)
+
+        for i, j in positions_to_mutate:
+            current_val = entity[i][j]
+            new_val = random.choice([v for v in range(1, 10) if v != current_val])
+            entity[i][j] = new_val
     # ==========================
 
     # ========================== main cycle
     def main_cycle(self, generations, population_size, mutation_rate):
-        best_fitness_values = []
+
         data_init()
 
         for generation in range(generations):
             population = sorted(self.population, key = self.fitness_full, reverse=True)
             best = population[0]
             best_fitness = self.fitness_full(best)
-            best_fitness_values.append(best_fitness)
+            self.best_fitness_values.append(best_fitness)
 
             # Сохранение данных о поколении
             data = [best_fitness, field_to_str(best)]
             save_data(generation, data)
 
-            print(f"Generation {generation}, Best fitness: {best_fitness}")
+            print(f"Generation {generation}, Best fitness: {best_fitness}, diversity: {calculate_population_diversity(population)}")
+            # print(f"Generation {generation}, Best fitness: {best_fitness}, diversity: ")
             if best_fitness == 243:
                 print("Sudoku solved!")
-                plot_progress(best_fitness_values)
+                plot_progress(self.best_fitness_values)
                 return best
 
-            selected = self.group_tournament_selection(3)
+            selected = self.group_tournament_selection(10)
 
-            # next_generation = population[:math.ceil(0.05 * len(population))]
-            next_generation = []
+            next_generation = population[:math.ceil(0.05 * len(population))]
+            # next_generation = []
             while len(next_generation) < population_size:
                 parent1, parent2 = random.sample(selected, 2)
-                child = self.uniform_crossover_cell(parent1, parent2)
+                # child = self.uniform_crossover_cell(parent1, parent2)
                 # child = []
                 # if random.random() < crossover_rate:
                 # child = self.one_point_crossing_sq(parent1, parent2)
@@ -212,17 +257,30 @@ class GeneticAlgorithm():
                 #     next_generation.append(parent2)
                 #     continue
 
+                child = []
+                # child = self.one_point_crossing_sq(parent1, parent2, fixed_positions)
+            # child1 = uniform_crossover_cell(parent1, parent2, fixed_positions)
+            # child2 = uniform_crossover_cell(parent1, parent2, fixed_positions)
+            # child3 = uniform_crossover_cell(parent1, parent2, fixed_positions)
+                cross_mode = random.choice([1,2,3])
+                if cross_mode == 1:
+                    child = self.uniform_crossover_sq(parent1, parent2)
+                if cross_mode == 2:
+                    child = self.uniform_crossover_row(parent1, parent2)
+                if cross_mode == 3:
+                    child = self.uniform_crossover_column(parent1, parent2)
+
                 if (random_number := random.random()) < mutation_rate:
-                    self.row_shuffle_mutation(child)
-                    # self.random_mutation(child)
+                    # self.row_shuffle_mutation(child)
+                    self.random_mutation(child)
 
                     # if len(get_bad_rows(child)) > 0:
                     #     mutation_among_bad_rows(child, fixed_positions, get_bad_rows(child), True)
                     # else:
 
                 # ВОТ СЮДА Я ДОБАВИЛ МЕГА РАНДОМНУЮ МУТАЦИЮ!!!!!!!!!!!!!!!!!!!
-                elif random_number < 0.15:
-                    child = self.very_random_mutation()
+                # elif random_number < 0.05:
+                #     child = self.very_random_mutation()
 
 
 
@@ -231,7 +289,7 @@ class GeneticAlgorithm():
             self.population = next_generation
 
         print("Max generations reached.")
-        plot_progress(best_fitness_values)
+        plot_progress(self.best_fitness_values)
         return max(self.population, key = self.fitness_full)
     # ==========================
 
@@ -261,14 +319,35 @@ def main_start(field: list[list[str]], population_size: int, generation_size: in
 def print_ind(ind):
     print('\n'.join([' '.join(list(map(str, ind[i]))) for i in range(9)]) + '\n')
 # ==========================
+def calculate_population_diversity(population: list[list[list[int]]]) -> float:
+    """
+    Вычисляет процент разнообразия в популяции судоку-решений.
+    
+    :param population: список особей, каждая из которых — 9x9 двумерный список.
+    :return: процент уникальных особей (diversity %) в популяции.
+    """
+    def grid_to_hashable(grid):
+        # Преобразуем 2D-решётку в tuple of tuples для сравнения
+        return tuple(tuple(row) for row in grid)
+    
+    unique_grids = set(grid_to_hashable(individual) for individual in population)
+    total = len(population)
+    
+    if total == 0:
+        return 0.0
+
+    diversity_percent = (len(unique_grids) / total) * 100
+    return diversity_percent
+# ==========================
+
 
 if __name__ == "__main__":
     gen_alg = GeneticAlgorithm()
     # gen_alg.insert_list_indexes =[(1, 1), (5, 6), (2, 8)]
     gen_alg.get_data('example.txt', 'f')
-    gen_alg.GeneratePopulation(500)
+    gen_alg.GeneratePopulation(8000)
 
-    solution = gen_alg.main_cycle( 10000, 500, 0.55)
+    solution = gen_alg.main_cycle(10000, 8000, 0.5)
 
     print(gen_alg.fitness_full(solution))
     print_ind(solution)
