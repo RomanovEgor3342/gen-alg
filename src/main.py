@@ -113,6 +113,19 @@ def uniform_crossover_sq(parent1, parent2, fixed_positions):
                         child[x][y] = source[x][y]
                         
     return child
+
+def uniform_crossover_cell(parent1, parent2, fixed_positions):
+    child = [row.copy() for row in parent1] 
+
+    for i in range(9):
+        for j in range(9):
+            if (i, j) in fixed_positions:
+                continue 
+            
+            child[i][j] = parent1[i][j] if random.random() < 0.5 else parent2[i][j]
+
+    return child
+
 # ========================== crossing
 # ========================== mutation data
 def get_bad_rows(individual):
@@ -160,7 +173,7 @@ def get_bad_columns(individual):
         
 # ========================== mutation data
 
-def genetic_algorithm(population, fixed_positions, generations=10000, population_size=100, mutation_rate=0.55):
+def genetic_algorithm(population, fixed_positions, generations=10000, population_size=100, mutation_rate=0.6):
     best_fitness_values = []
     data_init()
 
@@ -180,12 +193,24 @@ def genetic_algorithm(population, fixed_positions, generations=10000, population
             plot_progress(best_fitness_values)
             return best
 
-        selected = group_tournament_selection(population)
+        selected = group_tournament_selection(population, 4)
 
         next_generation = []
         while len(next_generation) < population_size:
             parent1, parent2 = random.sample(selected, 2)
-            child = one_point_crossing_sq(parent1, parent2, fixed_positions)
+
+            child = []
+            # child = one_point_crossing_sq(parent1, parent2, fixed_positions)
+            # child1 = uniform_crossover_cell(parent1, parent2, fixed_positions)
+            # child2 = uniform_crossover_cell(parent1, parent2, fixed_positions)
+            # child3 = uniform_crossover_cell(parent1, parent2, fixed_positions)
+            cross_mode = random.choice(1,2,3)
+            if cross_mode == 1:
+                child = self.uniform_crossover_sq(parent1, parent2)
+            if cross_mode == 2:
+                child = self.uniform_crossover_row(parent1, parent2)
+            if cross_mode == 3:
+                child = self.uniform_crossover_column(parent1, parent2)
 
             if random.random() < mutation_rate:
                 # if len(get_bad_rows(child)) > 0:
