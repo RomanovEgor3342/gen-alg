@@ -1,8 +1,7 @@
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.figure import Figure
-from PyQt5 import QtCore, QtGui
-from PyQt5 import QtWidgets
 from genetic_algorithm import *
 
 
@@ -10,7 +9,6 @@ class UiMainWindow(object):
     def __init__(self):
         self.i = 0
         self.alg = GeneticAlgorithm()
-        self.best_fitness_values = []
         self.population_size = 0
         self.population = self.alg.GeneratePopulation(10)
         self.fixed_positions = 0
@@ -424,6 +422,16 @@ class UiMainWindow(object):
                 QtWidgets.QMessageBox.warning(self.MainWindow, "Ошибка", f"Не удалось прочитать файл:\n{str(e)}")
 
     # ========================================
+    #   Обновление загрузки
+    # ========================================
+    def update_progress_bar(self):
+        min_rate = 243 - self.alg.best_fitness_values[0]
+        best = min_rate - (243 - self.alg.best_fitness_values[-1])
+
+        value = round((best / min_rate) * 100)
+        self.progressBar.setValue(value)
+
+    # ========================================
     #   Проверка поля
     # ========================================
     def table_check(self, table):
@@ -431,6 +439,25 @@ class UiMainWindow(object):
             for j in range(9):
                 if not table[i][j].isdigit() and not table[i][j] == 'x':
                     return False
+        return True
+
+    def enter_check(self, table):
+        for i in range(9):
+            line = []
+            column = []
+            for j in range(9):
+                if table[i][j].isdigit():
+                    if not (0 < int(table[i][j]) <= 9):
+                        return False
+                    if table[i][j] not in line:
+                        line.append(table[i][j])
+                    else:
+                        return False
+                if table[j][i].isdigit():
+                    if table[j][i] not in column:
+                        column.append(table[j][i])
+                    else:
+                        return False
         return True
 
     def file_check(self, text: str) -> bool:
@@ -511,6 +538,10 @@ class UiMainWindow(object):
                     self.error_label.setText("Ошибка: Неверно задано поле")
                     return
 
+                if not self.enter_check(table):
+                    self.error_label.setText("Ошибка: Поле нарушает\nправила игры")
+                    return
+
                 is_correct = True
 
 
@@ -520,7 +551,6 @@ class UiMainWindow(object):
             clean_data()
             data_init()
             self.i = 0
-            self.best_fitness_values = []
             self.alg.main_permutation, self.alg.insert_list_indexes, self.alg.insert_list_symbols = ReadFromList(self.table_to_array(self.tablescreen))
             self.population_size = int(self.enter_population_size.text())
             self.alg.population = []
@@ -558,6 +588,7 @@ class UiMainWindow(object):
     # ========================================
     def start_one(self):
         self.alg.one_iteration(self.population_size, self.p_mutation, self.i)
+        self.update_progress_bar()
         self.update_table()
         data = read_data()
         label_text = format_9x9_square(str_to_field(data[str(self.i)][1]))
@@ -585,6 +616,7 @@ class UiMainWindow(object):
     def start_until_the_end(self):
         for generation in range(self.i, self.generations):
             self.alg.one_iteration(self.population_size, self.p_mutation, generation + self.i)
+            self.update_progress_bar()
             self.update_table()
             data = read_data()
             label_text = format_9x9_square(str_to_field(data[str(self.i + generation)][1]))
