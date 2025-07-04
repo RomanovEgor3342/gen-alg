@@ -65,6 +65,7 @@ class UiMainWindow(object):
         self.tableWidget.setHorizontalHeaderLabels(["№", "Best fitness"])
         self.tableWidget.setColumnWidth(0, 60)
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -246,7 +247,7 @@ class UiMainWindow(object):
         #   Вывод ошибки
         # ========================================
         self.error_label = QtWidgets.QLabel(self.groupBox)
-        self.error_label.setGeometry(QtCore.QRect(0, 560, 300, 41))
+        self.error_label.setGeometry(QtCore.QRect(0, 530, 300, 41))
         font = QtGui.QFont()
         font.setPointSize(14)
         self.error_label.setFont(font)
@@ -466,6 +467,7 @@ class UiMainWindow(object):
                 self.graph_layout.removeWidget(self.canvas)
                 self.canvas.setParent(None)
             self.screen.setText('')
+            self.tableWidget.setRowCount(0)
             self.to_end.setEnabled(False)
             self.one_step.setEnabled(False)
             self.download_btn.setEnabled(True)
@@ -521,6 +523,7 @@ class UiMainWindow(object):
             self.best_fitness_values = []
             self.alg.main_permutation, self.alg.insert_list_indexes, self.alg.insert_list_symbols = ReadFromList(self.table_to_array(self.tablescreen))
             self.population_size = int(self.enter_population_size.text())
+            self.alg.population = []
             self.alg.GeneratePopulation(self.population_size)
             self.generations = int(self.enter_max.text())
             self.p_mutation = float(self.spin_mutation.text().replace(',', '.'))
