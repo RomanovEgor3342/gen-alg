@@ -43,14 +43,6 @@ class UiMainWindow(object):
         # ========================================
         #   Окно вывода лучшего результата
         # ========================================
-        self.label = QtWidgets.QLabel("Лучший результат", self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(600, 30, 121, 16))
-        font = QtGui.QFont()
-        font.setPointSize(13)
-        self.label.setFont(font)
-        self.label.setObjectName("label")
-        self.label.setStyleSheet("background-color: rgb(255, 255, 255, 0);")
-
         self.screen = QtWidgets.QLabel(self.centralwidget)
         self.screen.setGeometry(QtCore.QRect(510, 10, 300, 300))
         font = QtGui.QFont()
@@ -279,6 +271,19 @@ class UiMainWindow(object):
                                   "border-radius: 10px}")
 
         # ========================================
+        #   Шкала выполнения
+        # ========================================
+        self.progressBar = QtWidgets.QProgressBar(self.groupBox)
+        self.progressBar.setGeometry(QtCore.QRect(50, 580, 201, 40))
+        font = QtGui.QFont()
+        font.setPointSize(14)
+        self.progressBar.setFont(font)
+        self.progressBar.setStyleSheet("background-color: rgb(213, 215, 213, 0)")
+        self.progressBar.setProperty("value", 0)
+        self.progressBar.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
+        self.progressBar.setObjectName("progressBar")
+
+        # ========================================
         #   Кнопка один шаг
         # ========================================
         self.one_step = QtWidgets.QPushButton(self.groupBox)
@@ -317,7 +322,6 @@ class UiMainWindow(object):
         self.label_max.setText(_translate("MainWindow", "Макс. кол-во поколений"))
         self.label_f.setText(_translate("MainWindow", "Начальное поле"))
         self.error_label.setText(_translate("MainWindow", ""))
-        self.label.setText(_translate("MainWindow", "Лучший результат"))
         self.download_btn.setText(_translate("MainWindow", "Загрузить файл"))
         self.to_end.setText(_translate("MainWindow", "⏩"))
         self.one_step.setText(_translate("MainWindow", "▶"))
@@ -458,6 +462,10 @@ class UiMainWindow(object):
             print("Программа остановлена")
             self.start_btn.setText("Старт")
             clean_data()
+            if hasattr(self, 'canvas'):
+                self.graph_layout.removeWidget(self.canvas)
+                self.canvas.setParent(None)
+            self.screen.setText('')
             self.to_end.setEnabled(False)
             self.one_step.setEnabled(False)
             self.download_btn.setEnabled(True)
@@ -513,7 +521,7 @@ class UiMainWindow(object):
             self.best_fitness_values = []
             self.alg.main_permutation, self.alg.insert_list_indexes, self.alg.insert_list_symbols = ReadFromList(self.table_to_array(self.tablescreen))
             self.population_size = int(self.enter_population_size.text())
-            self.population = self.alg.GeneratePopulation(self.population_size)
+            self.alg.GeneratePopulation(self.population_size)
             self.generations = int(self.enter_max.text())
             self.p_mutation = float(self.spin_mutation.text().replace(',', '.'))
             self.update_table()
@@ -546,9 +554,12 @@ class UiMainWindow(object):
     #   Один шаг
     # ========================================
     def start_one(self):
-        self.i += 1
         self.alg.one_iteration(self.population_size, self.p_mutation, self.i)
         self.update_table()
+        data = read_data()
+        label_text = format_9x9_square(str_to_field(data[str(self.i)][1]))
+        self.screen.setText(label_text)
+        self.plot_graph(self.data.get('best_fitness')[:int(self.i)])
         if self.alg.best_fitness_values[-1] == 243:
             print("Sudoku solved!")
             self.to_end.setEnabled(False)
@@ -563,14 +574,19 @@ class UiMainWindow(object):
                                         "selection-color: rgb(255, 255, 255);"
                                         "selection-background-color: rgb(16, 81, 193);"
                                         "border-radius: 10px")
+        self.i += 1
 
     # ========================================
     #   До результата
     # ========================================
     def start_until_the_end(self):
         for generation in range(self.i, self.generations):
-            # self.one_iter(generation)
             self.alg.one_iteration(self.population_size, self.p_mutation, generation + self.i)
+            self.update_table()
+            data = read_data()
+            label_text = format_9x9_square(str_to_field(data[str(self.i + generation)][1]))
+            self.screen.setText(label_text)
+            self.plot_graph(self.data.get('best_fitness')[:int(self.i + generation)])
             print(f"Generation {self.i + generation}, Best fitness: {self.alg.best_fitness_values[-1]}")
             if self.alg.best_fitness_values[-1] == 243:
                 self.i += generation
@@ -587,9 +603,7 @@ class UiMainWindow(object):
                                             "selection-color: rgb(255, 255, 255);"
                                             "selection-background-color: rgb(16, 81, 193);"
                                             "border-radius: 10px")
-                self.update_table()
                 break
-        self.update_table()
 
 
 if __name__ == "__main__":
