@@ -616,13 +616,14 @@ class UiMainWindow(object):
     def start_until_the_end(self):
         for generation in range(self.i, self.generations):
             self.alg.one_iteration(self.population_size, self.p_mutation, generation + self.i)
+
             self.update_progress_bar()
             self.update_table()
             data = read_data()
-            label_text = format_9x9_square(str_to_field(data[str(self.i + generation)][1]))
+            label_text = format_9x9_square(str_to_field(data[str(generation)][1]))
             self.screen.setText(label_text)
-            self.plot_graph(self.data.get('best_fitness')[:int(self.i + generation)])
-            print(f"Generation {self.i + generation}, Best fitness: {self.alg.best_fitness_values[-1]}")
+            self.plot_graph(self.data.get('best_fitness')[:int(generation)])
+
             if self.alg.best_fitness_values[-1] == 243:
                 self.i += generation
                 print("Sudoku solved!")
@@ -640,6 +641,72 @@ class UiMainWindow(object):
                                             "border-radius: 10px")
                 break
 
+#     def start_until_the_end(self):
+#         self.thread = EvolutionThread(
+#             alg=self.alg,
+#             start_gen=self.i,
+#             total_gen=self.generations,
+#             pop_size=self.population_size,
+#             p_mutation=self.p_mutation,
+#             data=self.data
+#         )
+#         self.thread.update_signal.connect(self.on_update)
+#         self.thread.finished_signal.connect(self.on_finished)
+#         self.thread.start()
+#
+#     def on_update(self, label_text, plot_data):
+#         self.update_progress_bar()
+#         self.update_table()
+#         self.screen.setText(label_text)
+#         self.plot_graph(plot_data)
+#
+#     def on_finished(self):
+#         self.to_end.setEnabled(False)
+#         self.one_step.setEnabled(False)
+#         self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
+#                                   "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+#                                   "selection-color: rgb(255, 255, 255);"
+#                                   "selection-background-color: rgb(16, 81, 193);"
+#                                   "border-radius: 10px")
+#         self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
+#                                     "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+#                                     "selection-color: rgb(255, 255, 255);"
+#                                     "selection-background-color: rgb(16, 81, 193);"
+#                                     "border-radius: 10px")
+#         print("Sudoku solved or finished!")
+#
+# class EvolutionThread(QThread):
+#     update_signal = pyqtSignal(str, list)  # прогресс, таблица, текст, график
+#     finished_signal = pyqtSignal()
+#
+#     def __init__(self, alg, start_gen, total_gen, pop_size, p_mutation, data):
+#         super().__init__()
+#         self.alg = alg
+#         self.i = start_gen
+#         self.generations = total_gen
+#         self.population_size = pop_size
+#         self.p_mutation = p_mutation
+#         self.data = data
+#         self._stop_flag = False
+#
+#     def run(self):
+#         for generation in range(self.i, self.generations):
+#             if self._stop_flag:
+#                 break
+#
+#             self.alg.one_iteration(self.population_size, self.p_mutation, generation)
+#             label_text = format_9x9_square(str_to_field(read_data()[str(generation)][1]))
+#             plot_data = self.data.get('best_fitness')[:generation + 1]
+#
+#             self.update_signal.emit(label_text, plot_data)
+#
+#             if self.alg.best_fitness_values[-1] == 243:
+#                 break
+#
+#         self.finished_signal.emit()
+#
+#     def stop(self):
+#         self._stop_flag = True
 
 if __name__ == "__main__":
     import sys
