@@ -573,9 +573,11 @@ class UiMainWindow(object):
                 self.graph_layout.removeWidget(self.canvas)
                 self.canvas.setParent(None)
             self.screen.setText('')
+            self.progressBar.setValue(0)
             self.tableWidget.setRowCount(0)
             self.to_end.setEnabled(False)
             self.one_step.setEnabled(False)
+            self.pause.setEnabled(False)
             self.download_btn.setEnabled(True)
             self.spin_mutation.setReadOnly(False)
             self.enter_population_size.setReadOnly(False)
@@ -587,6 +589,11 @@ class UiMainWindow(object):
                                       "selection-background-color: rgb(16, 81, 193);"
                                       "border-radius: 10px")
             self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                        "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                        "selection-color: rgb(255, 255, 255);"
+                                        "selection-background-color: rgb(16, 81, 193);"
+                                        "border-radius: 10px")
+            self.pause.setStyleSheet("background-color: rgb(187, 188, 188);"
                                         "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
                                         "selection-color: rgb(255, 255, 255);"
                                         "selection-background-color: rgb(16, 81, 193);"
@@ -712,10 +719,10 @@ class UiMainWindow(object):
     # ========================================
     def start_until_the_end(self):
         self.pause.setEnabled(True)
-        for generation in range(self.i, self.generations):
+        for generation in range(self.i + 1, self.generations):
             while self.is_pause:
                 time.sleep(2)
-            self.alg.one_iteration(self.population_size, self.p_mutation, generation + self.i)
+            self.alg.one_iteration(self.population_size, self.p_mutation, generation)
 
             self.update_progress_bar()
             self.update_table()
@@ -729,7 +736,7 @@ class UiMainWindow(object):
                 print("Sudoku solved!")
                 self.to_end.setEnabled(False)
                 self.one_step.setEnabled(False)
-                self.one_step.setEnabled(False)
+                self.pause.setEnabled(False)
                 self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
                                           "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
                                           "selection-color: rgb(255, 255, 255);"
