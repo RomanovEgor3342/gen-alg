@@ -711,6 +711,31 @@ class UiMainWindow(object):
                                         "selection-color: rgb(255, 255, 255);"
                                         "selection-background-color: rgb(16, 81, 193);"
                                         "border-radius: 10px")
+        if self.i == self.generations:
+            self.to_end.setEnabled(False)
+            self.one_step.setEnabled(False)
+            self.pause.setEnabled(False)
+            self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                      "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                      "selection-color: rgb(255, 255, 255);"
+                                      "selection-background-color: rgb(16, 81, 193);"
+                                      "border-radius: 10px")
+            self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                        "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                        "selection-color: rgb(255, 255, 255);"
+                                        "selection-background-color: rgb(16, 81, 193);"
+                                        "border-radius: 10px")
+            self.pause.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                     "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                     "selection-color: rgb(255, 255, 255);"
+                                     "selection-background-color: rgb(16, 81, 193);"
+                                     "border-radius: 10px")
+            self.label_bar.setStyleSheet("background-color: rgb(187, 188, 188);\n"
+                                         "border-color: rgb(147, 147, 147);\n"
+                                         "color: rgb(20, 21, 21);\n"
+                                         "selection-color: rgb(255, 255, 255);\n"
+                                         "selection-background-color: rgb(16, 81, 193);\n"
+                                         "border-radius: 10px;")
 
         self.i += 1
 
@@ -719,6 +744,12 @@ class UiMainWindow(object):
     # ========================================
     def start_until_the_end(self):
         self.pause.setEnabled(True)
+        self.start_btn.setEnabled(False)
+        self.start_btn.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                  "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                  "selection-color: rgb(255, 255, 255);"
+                                  "selection-background-color: rgb(16, 81, 193);"
+                                  "border-radius: 10px")
         for generation in range(self.i + 1, self.generations):
             while self.is_pause:
                 time.sleep(2)
@@ -734,31 +765,37 @@ class UiMainWindow(object):
             if self.alg.best_fitness_values[-1] == 243:
                 self.i += generation
                 print("Sudoku solved!")
-                self.to_end.setEnabled(False)
-                self.one_step.setEnabled(False)
-                self.pause.setEnabled(False)
-                self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
-                                          "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
-                                          "selection-color: rgb(255, 255, 255);"
-                                          "selection-background-color: rgb(16, 81, 193);"
-                                          "border-radius: 10px")
-                self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
-                                            "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
-                                            "selection-color: rgb(255, 255, 255);"
-                                            "selection-background-color: rgb(16, 81, 193);"
-                                            "border-radius: 10px")
-                self.pause.setStyleSheet("background-color: rgb(187, 188, 188);"
-                                            "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
-                                            "selection-color: rgb(255, 255, 255);"
-                                            "selection-background-color: rgb(16, 81, 193);"
-                                            "border-radius: 10px")
-                self.label_bar.setStyleSheet("background-color: rgb(187, 188, 188);\n"
-                                             "border-color: rgb(147, 147, 147);\n"
-                                             "color: rgb(20, 21, 21);\n"
-                                             "selection-color: rgb(255, 255, 255);\n"
-                                             "selection-background-color: rgb(16, 81, 193);\n"
-                                             "border-radius: 10px;")
                 break
+        self.to_end.setEnabled(False)
+        self.one_step.setEnabled(False)
+        self.pause.setEnabled(False)
+        self.start_btn.setEnabled(True)
+        self.start_btn.setStyleSheet("background-color: rgb(239, 240, 244);"
+                                     "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                     "selection-color: rgb(255, 255, 255);"
+                                     "selection-background-color: rgb(16, 81, 193);"
+                                     "border-radius: 10px")
+        self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                  "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                  "selection-color: rgb(255, 255, 255);"
+                                  "selection-background-color: rgb(16, 81, 193);"
+                                  "border-radius: 10px")
+        self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                    "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                    "selection-color: rgb(255, 255, 255);"
+                                    "selection-background-color: rgb(16, 81, 193);"
+                                    "border-radius: 10px")
+        self.pause.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                 "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                 "selection-color: rgb(255, 255, 255);"
+                                 "selection-background-color: rgb(16, 81, 193);"
+                                 "border-radius: 10px")
+        self.label_bar.setStyleSheet("background-color: rgb(187, 188, 188);\n"
+                                     "border-color: rgb(147, 147, 147);\n"
+                                     "color: rgb(20, 21, 21);\n"
+                                     "selection-color: rgb(255, 255, 255);\n"
+                                     "selection-background-color: rgb(16, 81, 193);\n"
+                                     "border-radius: 10px;")
 
 #     def start_until_the_end(self):
 #         self.thread = EvolutionThread(
