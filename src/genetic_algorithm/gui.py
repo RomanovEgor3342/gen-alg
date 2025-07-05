@@ -517,8 +517,21 @@ class UiMainWindow(object):
             if hasattr(self, 'generation_timer'):
                 self.generation_timer.start(0)  # Запускаем таймер
                 self.pause.setText("⏸")
+                self.start_btn.setEnabled(False)
+                self.start_btn.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                             "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                             "selection-color: rgb(255, 255, 255);"
+                                             "selection-background-color: rgb(16, 81, 193);"
+                                             "border-radius: 10px")
+
         else:
             self.pause.setText("▶")
+            self.start_btn.setEnabled(True)
+            self.start_btn.setStyleSheet("background-color: rgb(239, 240, 244);"
+                                         "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                         "selection-color: rgb(255, 255, 255);"
+                                         "selection-background-color: rgb(16, 81, 193);"
+                                         "border-radius: 10px")
 
     # ========================================
     #   Проверка поля
