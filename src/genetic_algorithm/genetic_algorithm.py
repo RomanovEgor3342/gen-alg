@@ -337,7 +337,7 @@ class GeneticAlgorithm():
         # print(f"Generation {generation}, Best fitness: {best_fitness}, diversity: ")
         if best_fitness == 243:
             print("Sudoku solved!")
-            plot_progress(self.best_fitness_values)
+            # plot_progress(self.best_fitness_values)
             return best
 
         # / selection
