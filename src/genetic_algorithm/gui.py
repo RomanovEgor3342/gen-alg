@@ -15,6 +15,10 @@ class UiMainWindow(object):
         self.generations = 0
         self.p_mutation = 0
         self.is_start = False
+        self.figure = None
+        self.ax = None
+        self.line = None
+        self.canvas = None
 
     def setup_ui(self, MainWindow):
 
@@ -364,25 +368,52 @@ class UiMainWindow(object):
     # ========================================
     #   Отрисовщик графика
     # ========================================
+    # def plot_graph(self, fitness_values):
+    #     if hasattr(self, 'canvas'):
+    #         self.graph_layout.removeWidget(self.canvas)
+    #         self.canvas.setParent(None)
+
+    #     figure = Figure(figsize=(10, 5), tight_layout=True)
+    #     figure.patch.set_facecolor((224 / 255, 225 / 255, 225 / 255))
+    #     self.canvas = FigureCanvas(figure)
+    #     ax = figure.add_subplot(111)
+    #     ax.set_facecolor((224 / 255, 225 / 255, 225 / 255))
+
+    #     ax.plot(fitness_values, label='Best Fitness')
+    #     ax.set_xlabel("Generation")
+    #     ax.set_ylabel("Fitness")
+    #     ax.set_title("Best Fitness per Generation")
+    #     ax.legend()
+    #     ax.grid(True)
+
+    #     self.graph_layout.addWidget(self.canvas)
+
     def plot_graph(self, fitness_values):
-        if hasattr(self, 'canvas'):
-            self.graph_layout.removeWidget(self.canvas)
-            self.canvas.setParent(None)
-
-        figure = Figure(figsize=(10, 5), tight_layout=True)
-        figure.patch.set_facecolor((224 / 255, 225 / 255, 225 / 255))
-        self.canvas = FigureCanvas(figure)
-        ax = figure.add_subplot(111)
-        ax.set_facecolor((224 / 255, 225 / 255, 225 / 255))
-
-        ax.plot(fitness_values, label='Best Fitness')
-        ax.set_xlabel("Generation")
-        ax.set_ylabel("Fitness")
-        ax.set_title("Best Fitness per Generation")
-        ax.legend()
-        ax.grid(True)
-
-        self.graph_layout.addWidget(self.canvas)
+        # Если график ещё не инициализирован
+        if not hasattr(self, 'canvas') or self.canvas is None:
+            self.figure = Figure(figsize=(10, 5), tight_layout=True)
+            self.figure.patch.set_facecolor((224/255, 225/255, 225/255))
+            
+            self.canvas = FigureCanvas(self.figure)
+            self.ax = self.figure.add_subplot(111)
+            self.ax.set_facecolor((224/255, 225/255, 225/255))
+            
+            # Добавляем в layout
+            self.graph_layout.addWidget(self.canvas)
+            self.canvas.show()
+        
+        # Очищаем и перерисовываем график
+        self.ax.clear()
+        self.ax.plot(fitness_values, label='Best Fitness')
+        self.ax.set_xlabel("Generation")
+        self.ax.set_ylabel("Fitness")
+        self.ax.set_title("Best Fitness per Generation")
+        self.ax.legend()
+        self.ax.grid(True)
+        self.ax.set_facecolor((224/255, 225/255, 225/255))
+        
+        # Обновляем холст
+        self.canvas.draw()
 
     # ========================================
     #   Таблица в массив
@@ -613,100 +644,100 @@ class UiMainWindow(object):
     # ========================================
     #   До результата
     # ========================================
-    # def start_until_the_end(self):
-    #     for generation in range(self.i, self.generations):
-    #         self.alg.one_iteration(self.population_size, self.p_mutation, generation + self.i)
-    #
-    #         self.update_progress_bar()
-    #         self.update_table()
-    #         data = read_data()
-    #         label_text = format_9x9_square(str_to_field(data[str(generation)][1]))
-    #         self.screen.setText(label_text)
-    #         self.plot_graph(self.data.get('best_fitness')[:int(generation)])
-    #
-    #         if self.alg.best_fitness_values[-1] == 243:
-    #             self.i += generation
-    #             print("Sudoku solved!")
-    #             self.to_end.setEnabled(False)
-    #             self.one_step.setEnabled(False)
-    #             self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
-    #                                       "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
-    #                                       "selection-color: rgb(255, 255, 255);"
-    #                                       "selection-background-color: rgb(16, 81, 193);"
-    #                                       "border-radius: 10px")
-    #             self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
-    #                                         "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
-    #                                         "selection-color: rgb(255, 255, 255);"
-    #                                         "selection-background-color: rgb(16, 81, 193);"
-    #                                         "border-radius: 10px")
-    #             break
-
     def start_until_the_end(self):
-        self.thread = EvolutionThread(
-            alg=self.alg,
-            start_gen=self.i,
-            total_gen=self.generations,
-            pop_size=self.population_size,
-            p_mutation=self.p_mutation,
-            data=self.data
-        )
-        self.thread.update_signal.connect(self.on_update)
-        self.thread.finished_signal.connect(self.on_finished)
-        self.thread.start()
-
-    def on_update(self, label_text, plot_data):
-        self.update_progress_bar()
-        self.update_table()
-        self.screen.setText(label_text)
-        self.plot_graph(plot_data)
-
-    def on_finished(self):
-        self.to_end.setEnabled(False)
-        self.one_step.setEnabled(False)
-        self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
-                                  "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
-                                  "selection-color: rgb(255, 255, 255);"
-                                  "selection-background-color: rgb(16, 81, 193);"
-                                  "border-radius: 10px")
-        self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
-                                    "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
-                                    "selection-color: rgb(255, 255, 255);"
-                                    "selection-background-color: rgb(16, 81, 193);"
-                                    "border-radius: 10px")
-        print("Sudoku solved or finished!")
-
-class EvolutionThread(QThread):
-    update_signal = pyqtSignal(str, list)  # прогресс, таблица, текст, график
-    finished_signal = pyqtSignal()
-
-    def __init__(self, alg, start_gen, total_gen, pop_size, p_mutation, data):
-        super().__init__()
-        self.alg = alg
-        self.i = start_gen
-        self.generations = total_gen
-        self.population_size = pop_size
-        self.p_mutation = p_mutation
-        self.data = data
-        self._stop_flag = False
-
-    def run(self):
         for generation in range(self.i, self.generations):
-            if self._stop_flag:
-                break
+            self.alg.one_iteration(self.population_size, self.p_mutation, generation + self.i)
 
-            self.alg.one_iteration(self.population_size, self.p_mutation, generation)
-            label_text = format_9x9_square(str_to_field(read_data()[str(generation)][1]))
-            plot_data = self.data.get('best_fitness')[:generation + 1]
-
-            self.update_signal.emit(label_text, plot_data)
+            self.update_progress_bar()
+            self.update_table()
+            data = read_data()
+            label_text = format_9x9_square(str_to_field(data[str(generation)][1]))
+            self.screen.setText(label_text)
+            self.plot_graph(self.data.get('best_fitness')[:int(generation)])
 
             if self.alg.best_fitness_values[-1] == 243:
+                self.i += generation
+                print("Sudoku solved!")
+                self.to_end.setEnabled(False)
+                self.one_step.setEnabled(False)
+                self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                          "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                          "selection-color: rgb(255, 255, 255);"
+                                          "selection-background-color: rgb(16, 81, 193);"
+                                          "border-radius: 10px")
+                self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                            "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                            "selection-color: rgb(255, 255, 255);"
+                                            "selection-background-color: rgb(16, 81, 193);"
+                                            "border-radius: 10px")
                 break
 
-        self.finished_signal.emit()
-
-    def stop(self):
-        self._stop_flag = True
+#     def start_until_the_end(self):
+#         self.thread = EvolutionThread(
+#             alg=self.alg,
+#             start_gen=self.i,
+#             total_gen=self.generations,
+#             pop_size=self.population_size,
+#             p_mutation=self.p_mutation,
+#             data=self.data
+#         )
+#         self.thread.update_signal.connect(self.on_update)
+#         self.thread.finished_signal.connect(self.on_finished)
+#         self.thread.start()
+#
+#     def on_update(self, label_text, plot_data):
+#         self.update_progress_bar()
+#         self.update_table()
+#         self.screen.setText(label_text)
+#         self.plot_graph(plot_data)
+#
+#     def on_finished(self):
+#         self.to_end.setEnabled(False)
+#         self.one_step.setEnabled(False)
+#         self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
+#                                   "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+#                                   "selection-color: rgb(255, 255, 255);"
+#                                   "selection-background-color: rgb(16, 81, 193);"
+#                                   "border-radius: 10px")
+#         self.one_step.setStyleSheet("background-color: rgb(187, 188, 188);"
+#                                     "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+#                                     "selection-color: rgb(255, 255, 255);"
+#                                     "selection-background-color: rgb(16, 81, 193);"
+#                                     "border-radius: 10px")
+#         print("Sudoku solved or finished!")
+#
+# class EvolutionThread(QThread):
+#     update_signal = pyqtSignal(str, list)  # прогресс, таблица, текст, график
+#     finished_signal = pyqtSignal()
+#
+#     def __init__(self, alg, start_gen, total_gen, pop_size, p_mutation, data):
+#         super().__init__()
+#         self.alg = alg
+#         self.i = start_gen
+#         self.generations = total_gen
+#         self.population_size = pop_size
+#         self.p_mutation = p_mutation
+#         self.data = data
+#         self._stop_flag = False
+#
+#     def run(self):
+#         for generation in range(self.i, self.generations):
+#             if self._stop_flag:
+#                 break
+#
+#             self.alg.one_iteration(self.population_size, self.p_mutation, generation)
+#             label_text = format_9x9_square(str_to_field(read_data()[str(generation)][1]))
+#             plot_data = self.data.get('best_fitness')[:generation + 1]
+#
+#             self.update_signal.emit(label_text, plot_data)
+#
+#             if self.alg.best_fitness_values[-1] == 243:
+#                 break
+#
+#         self.finished_signal.emit()
+#
+#     def stop(self):
+#         self._stop_flag = True
 
 if __name__ == "__main__":
     import sys

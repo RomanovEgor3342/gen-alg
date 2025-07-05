@@ -3,6 +3,13 @@ import numpy as np
 from typing import overload, Literal, Union
 import math
 
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+
+
+
 from data_saver import *
 from reader_writer import *
 from plot_drawing import *
@@ -222,12 +229,22 @@ class GeneticAlgorithm():
     def main_cycle(self, generations, population_size, mutation_rate):
 
         data_init()
+        # Включим интерактивный режим
+        plt.ion()  # Turn on interactive mode
+        fig, ax = plt.subplots()
+        line, = ax.plot([], [], 'r-')  # Пустая линия для графика
+        ax.set_xlabel('Поколение')
+        ax.set_ylabel('Лучшая приспособленность')
+        ax.set_title('График приспособленности в реальном времени')
 
         for generation in range(generations):
             population = sorted(self.population, key = self.fitness_full, reverse=True)
             best = population[0]
             best_fitness = self.fitness_full(best)
             self.best_fitness_values.append(best_fitness)
+
+
+            self.update_plot(range(generation+1), self.best_fitness_values, line, ax, fig)
 
             # Сохранение данных о поколении
             data = [best_fitness, field_to_str(best)]
@@ -286,6 +303,8 @@ class GeneticAlgorithm():
                 next_generation.append(child)
 
             self.population = next_generation
+        plt.ioff()  # Выключаем интерактивный режим
+        plt.show()  # Показываем финальный график
 
         print("Max generations reached.")
         plot_progress(self.best_fitness_values)
@@ -297,6 +316,17 @@ class GeneticAlgorithm():
     ТЕСТОВЫЕ ФУНКЦИИ АЛГОРИТМА
     ============================
     """
+
+    def update_plot(self, generations, best_fitness, line, ax, fig):
+        # best_fitness.append(fitness)
+        
+        line.set_data(generations, best_fitness)
+        ax.relim()  # Пересчет границ
+        ax.autoscale_view()  # Автомасштабирование
+        fig.canvas.draw()  # Перерисовка
+        fig.canvas.flush_events()  # Очистка буфера событий
+
+
     def very_random_mutation(self) -> list[list[int]]:
         new_entity = np.random.permutation(self.main_permutation).tolist()
         for index in range(len(self.insert_list_symbols)):
@@ -417,14 +447,52 @@ def calculate_population_diversity(population: list[list[list[int]]]) -> float:
     return diversity_percent
 # ==========================
 
+# ======================================================================================================
+# ======================================================================================================
+# ======================================================================================================
+
+
+# # Данные для графика (будут обновляться)
+# generations = []
+# best_fitness = []
+
+
+    
+#     # Можно добавить небольшую задержку для плавности
+#     plt.pause(0.01)
+
+# # Пример генетического алгоритма
+# def genetic_algorithm(population_size=50, generations=100):
+#     population = np.random.rand(population_size)
+    
+#     for gen in range(generations):
+#         # Здесь вычисляется приспособленность (пример)
+#         fitness = np.sin(population * 10) + 1  # Простая тестовая функция
+        
+#         # Выбираем лучшую приспособленность
+#         best_current_fitness = np.max(fitness)
+        
+#         # Обновляем график
+#         update_plot(gen, best_current_fitness)
+        
+#         # Селекция, кроссовер, мутация (упрощённо)
+#         best_idx = np.argmax(fitness)
+#         population = np.clip(population + np.random.randn(population_size) * 0.1, 0, 1)
+    
+#     plt.ioff()  # Выключаем интерактивный режим
+#     plt.show()  # Показываем финальный график
+
+# # Запускаем алгоритм
+# genetic_algorithm()
+
 
 if __name__ == "__main__":
     gen_alg = GeneticAlgorithm()
     # gen_alg.insert_list_indexes =[(1, 1), (5, 6), (2, 8)]
     gen_alg.get_data('example.txt', 'f')
-    gen_alg.GeneratePopulation(8000)
+    gen_alg.GeneratePopulation(400)
 
-    solution = gen_alg.main_cycle(10000, 8000, 0.5)
+    solution = gen_alg.main_cycle(10000, 400, 0.5)
 
     print(gen_alg.fitness_full(solution))
     print_ind(solution)
