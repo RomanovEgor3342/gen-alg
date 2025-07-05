@@ -398,11 +398,9 @@ class UiMainWindow(object):
             self.ax = self.figure.add_subplot(111)
             self.ax.set_facecolor((224/255, 225/255, 225/255))
             
-            # Добавляем в layout
             self.graph_layout.addWidget(self.canvas)
             self.canvas.show()
-        
-        # Очищаем и перерисовываем график
+
         self.ax.clear()
         self.ax.plot(fitness_values, label='Best Fitness')
         self.ax.set_xlabel("Generation")
@@ -411,9 +409,9 @@ class UiMainWindow(object):
         self.ax.legend()
         self.ax.grid(True)
         self.ax.set_facecolor((224/255, 225/255, 225/255))
-        
-        # Обновляем холст
+
         self.canvas.draw()
+        QtWidgets.QApplication.processEvents()
 
     # ========================================
     #   Таблица в массив
