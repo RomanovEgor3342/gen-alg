@@ -515,14 +515,16 @@ class UiMainWindow(object):
 
         if not self.is_pause:  # Если снимаем паузу
             if hasattr(self, 'generation_timer'):
-                self.generation_timer.start(0)  # Запускаем таймер
-                self.pause.setText("⏸")
-                self.start_btn.setEnabled(False)
-                self.start_btn.setStyleSheet("background-color: rgb(187, 188, 188);"
-                                             "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
-                                             "selection-color: rgb(255, 255, 255);"
-                                             "selection-background-color: rgb(16, 81, 193);"
-                                             "border-radius: 10px")
+                QTimer.singleShot(0, lambda: (
+                    self.generation_timer.start(0),  # Запускаем таймер
+                    self.pause.setText("⏸"),
+                    self.start_btn.setEnabled(False),
+                    self.start_btn.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                                "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                                "selection-color: rgb(255, 255, 255);"
+                                                "selection-background-color: rgb(16, 81, 193);"
+                                                "border-radius: 10px")
+                ))
 
         else:
             self.pause.setText("▶")
@@ -592,7 +594,16 @@ class UiMainWindow(object):
         if self.is_start:
             print("Программа остановлена")
             self.start_btn.setText("Старт")
+            if self.is_pause:
+                self.is_pause = False
+                self.pause.setText("⏸")  # Устанавливаем значок паузы
+                self.pause.setStyleSheet("background-color: rgb(239, 240, 244);"
+                                    "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                    "selection-color: rgb(255, 255, 255);"
+                                    "selection-background-color: rgb(16, 81, 193);"
+                                    "border-radius: 10px")
             clean_data()
+            
             if hasattr(self, 'canvas'):
                 self.graph_layout.removeWidget(self.canvas)
                 self.canvas.setParent(None)
@@ -774,6 +785,15 @@ class UiMainWindow(object):
                                   "selection-color: rgb(255, 255, 255);"
                                   "selection-background-color: rgb(16, 81, 193);"
                                   "border-radius: 10px")
+
+        self.is_pause = False
+        self.pause.setText("⏸")  # Устанавливаем значок паузы
+        self.pause.setStyleSheet("background-color: rgb(239, 240, 244);"
+                               "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                               "selection-color: rgb(255, 255, 255);"
+                               "selection-background-color: rgb(16, 81, 193);"
+                               "border-radius: 10px")
+
         if not hasattr(self, 'generation_timer'):
             self.generation_timer = QTimer()
             self.generation_timer.timeout.connect(self._process_generation)
