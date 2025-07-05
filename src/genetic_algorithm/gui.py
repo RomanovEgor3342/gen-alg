@@ -3,6 +3,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.figure import Figure
 from genetic_algorithm import *
+import time
 
 
 class UiMainWindow(object):
@@ -19,6 +20,7 @@ class UiMainWindow(object):
         self.ax = None
         self.line = None
         self.canvas = None
+        self.is_pause = False
 
     def setup_ui(self, MainWindow):
 
@@ -112,7 +114,7 @@ class UiMainWindow(object):
         #   Кнопка запуска
         # ========================================
         self.start_btn = QtWidgets.QPushButton(self.groupBox)
-        self.start_btn.setGeometry(QtCore.QRect(45, 610, 100, 30))
+        self.start_btn.setGeometry(QtCore.QRect(25, 610, 100, 30))
         font = QtGui.QFont()
         font.setPointSize(14)
         self.start_btn.setFont(font)
@@ -188,6 +190,41 @@ class UiMainWindow(object):
         self.enter_population_size.setValidator(int_validator)
 
         # ========================================
+        #   Панель управдения
+        # ========================================
+        self.label_bar = QtWidgets.QLabel(self.groupBox)
+        self.label_bar.setGeometry(QtCore.QRect(130, 610, 145, 30))
+        self.label_bar.setStyleSheet("background-color: rgb(187, 188, 188);\n"
+                                     "border-color: rgb(147, 147, 147);\n"
+                                     "color: rgb(20, 21, 21);\n"
+                                     "selection-color: rgb(255, 255, 255);\n"
+                                     "selection-background-color: rgb(16, 81, 193);\n"
+                                     "border-radius: 10px;")
+        self.label_bar.setText("")
+        self.label_bar.setObjectName("label_bar")
+        self.label_bar.raise_()
+
+        # ========================================
+        #   Кнопка паузы
+        # ========================================
+        self.pause = QtWidgets.QPushButton(self.groupBox)
+        self.pause.setGeometry(QtCore.QRect(130, 610, 30, 30))
+        self.pause.setMinimumSize(QtCore.QSize(30, 30))
+        self.pause.setMaximumSize(QtCore.QSize(30, 30))
+        font = QtGui.QFont()
+        font.setPointSize(17)
+        font.setBold(False)
+        font.setWeight(50)
+        self.pause.setFont(font)
+        self.pause.setEnabled(False)
+        self.pause.setObjectName("pause")
+        self.pause.setStyleSheet("QPushButton {background-color: rgb(187, 188, 188);"
+                                 "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                 "selection-color: rgb(255, 255, 255);"
+                                 "selection-background-color: rgb(16, 81, 193);"
+                                 "border-radius: 10px}")
+
+        # ========================================
         #   Макс. кол-во поколений
         # ========================================
         self.label_max = QtWidgets.QLabel(self.groupBox)
@@ -261,7 +298,7 @@ class UiMainWindow(object):
         #   Кнопка включить до результата
         # ========================================
         self.to_end = QtWidgets.QPushButton(self.groupBox)
-        self.to_end.setGeometry(QtCore.QRect(150, 610, 70, 30))
+        self.to_end.setGeometry(QtCore.QRect(165, 610, 70, 30))
         font = QtGui.QFont()
         font.setPointSize(25)
         self.to_end.setFont(font)
@@ -290,7 +327,7 @@ class UiMainWindow(object):
         #   Кнопка один шаг
         # ========================================
         self.one_step = QtWidgets.QPushButton(self.groupBox)
-        self.one_step.setGeometry(QtCore.QRect(225, 610, 30, 30))
+        self.one_step.setGeometry(QtCore.QRect(240, 610, 35, 30))
         font = QtGui.QFont()
         font.setPointSize(17)
         font.setBold(False)
@@ -327,7 +364,8 @@ class UiMainWindow(object):
         self.error_label.setText(_translate("MainWindow", ""))
         self.download_btn.setText(_translate("MainWindow", "Загрузить файл"))
         self.to_end.setText(_translate("MainWindow", "⏩"))
-        self.one_step.setText(_translate("MainWindow", "▶"))
+        self.pause.setText(_translate("MainWindow", "⏸"))
+        self.one_step.setText(_translate("MainWindow", "+1"))
 
     # ========================================
     #   Обработчик выбора строки
@@ -461,6 +499,17 @@ class UiMainWindow(object):
         self.progressBar.setValue(value)
 
     # ========================================
+    #   Обновление загрузки
+    # ========================================
+    def pause_alg(self):
+        if self.is_pause:
+            self.is_pause = False
+            self.pause.setText("⏸")
+        else:
+            self.is_pause = True
+            self.pause.setText("▶")
+
+    # ========================================
     #   Проверка поля
     # ========================================
     def table_check(self, table):
@@ -509,6 +558,7 @@ class UiMainWindow(object):
         self.start_btn.clicked.connect(self.start)
         self.one_step.clicked.connect(self.start_one)
         self.to_end.clicked.connect(self.start_until_the_end)
+        self.pause.clicked.connect(self.pause_alg)
         self.download_btn.clicked.connect(self.open_txt_file)
 
     # ========================================
@@ -546,6 +596,12 @@ class UiMainWindow(object):
                                             "selection-color: rgb(255, 255, 255);"
                                             "selection-background-color: rgb(16, 81, 193);"
                                             "border-radius: 10px")
+            self.label_bar.setStyleSheet("background-color: rgb(187, 188, 188);\n"
+                                         "border-color: rgb(147, 147, 147);\n"
+                                         "color: rgb(20, 21, 21);\n"
+                                         "selection-color: rgb(255, 255, 255);\n"
+                                         "selection-background-color: rgb(16, 81, 193);\n"
+                                         "border-radius: 10px;")
             self.is_start = False
         else:
             is_correct = False
@@ -605,11 +661,22 @@ class UiMainWindow(object):
                                         "selection-background-color: rgb(16, 81, 193);"
                                         "border-radius: 10px}"
                                         "QPushButton:pressed {background-color: rgb(200, 200, 200)}")
+            self.pause.setStyleSheet("QPushButton {background-color: rgb(239, 240, 244);"
+                                     "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
+                                     "selection-color: rgb(255, 255, 255);"
+                                     "selection-background-color: rgb(16, 81, 193);"
+                                     "border-radius: 10px} QPushButton:pressed {background-color: rgb(200, 200, 200)}")
             self.download_btn.setStyleSheet("background-color: rgb(187, 188, 188);"
                                             "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
                                             "selection-color: rgb(255, 255, 255);"
                                             "selection-background-color: rgb(16, 81, 193);"
                                             "border-radius: 10px")
+            self.label_bar.setStyleSheet("background-color: rgb(239, 240, 244);\n"
+                                         "border-color: rgb(147, 147, 147);\n"
+                                         "color: rgb(20, 21, 21);\n"
+                                         "selection-color: rgb(255, 255, 255);\n"
+                                         "selection-background-color: rgb(16, 81, 193);\n"
+                                         "border-radius: 10px;")
             self.is_start = True
 
     # ========================================
@@ -637,13 +704,17 @@ class UiMainWindow(object):
                                         "selection-color: rgb(255, 255, 255);"
                                         "selection-background-color: rgb(16, 81, 193);"
                                         "border-radius: 10px")
+
         self.i += 1
 
     # ========================================
     #   До результата
     # ========================================
     def start_until_the_end(self):
+        self.pause.setEnabled(True)
         for generation in range(self.i, self.generations):
+            while self.is_pause:
+                time.sleep(2)
             self.alg.one_iteration(self.population_size, self.p_mutation, generation + self.i)
 
             self.update_progress_bar()
@@ -658,6 +729,7 @@ class UiMainWindow(object):
                 print("Sudoku solved!")
                 self.to_end.setEnabled(False)
                 self.one_step.setEnabled(False)
+                self.one_step.setEnabled(False)
                 self.to_end.setStyleSheet("background-color: rgb(187, 188, 188);"
                                           "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21); "
                                           "selection-color: rgb(255, 255, 255);"
@@ -668,6 +740,17 @@ class UiMainWindow(object):
                                             "selection-color: rgb(255, 255, 255);"
                                             "selection-background-color: rgb(16, 81, 193);"
                                             "border-radius: 10px")
+                self.pause.setStyleSheet("background-color: rgb(187, 188, 188);"
+                                            "border-color: rgb(147, 147, 147); color: rgb(20, 21, 21);"
+                                            "selection-color: rgb(255, 255, 255);"
+                                            "selection-background-color: rgb(16, 81, 193);"
+                                            "border-radius: 10px")
+                self.label_bar.setStyleSheet("background-color: rgb(187, 188, 188);\n"
+                                             "border-color: rgb(147, 147, 147);\n"
+                                             "color: rgb(20, 21, 21);\n"
+                                             "selection-color: rgb(255, 255, 255);\n"
+                                             "selection-background-color: rgb(16, 81, 193);\n"
+                                             "border-radius: 10px;")
                 break
 
 #     def start_until_the_end(self):
