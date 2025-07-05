@@ -1,14 +1,10 @@
 import random
-import numpy as np
-from typing import overload, Literal, Union
 import math
+from typing import overload, Literal, Union
+from matplotlib.animation import FuncAnimation
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-
-
-
 
 from data_saver import *
 from reader_writer import *
@@ -263,21 +259,7 @@ class GeneticAlgorithm():
             next_generation = []
             while len(next_generation) < population_size:
                 parent1, parent2 = random.sample(selected, 2)
-                # child = self.uniform_crossover_cell(parent1, parent2)
-                # child = []
-                # if random.random() < crossover_rate:
-                # child = self.one_point_crossing_sq(parent1, parent2)
-
-                # else:
-                #     next_generation.append(parent1)
-                #     next_generation.append(parent2)
-                #     continue
-
                 child = []
-                # child = self.one_point_crossing_sq(parent1, parent2, fixed_positions)
-            # child1 = uniform_crossover_cell(parent1, parent2, fixed_positions)
-            # child2 = uniform_crossover_cell(parent1, parent2, fixed_positions)
-            # child3 = uniform_crossover_cell(parent1, parent2, fixed_positions)
                 cross_mode = random.choice([1,2,3])
                 if cross_mode == 1:
                     child = self.uniform_crossover_sq(parent1, parent2)
@@ -290,15 +272,9 @@ class GeneticAlgorithm():
                     # self.row_shuffle_mutation(child)
                     self.random_mutation(child)
 
-                    # if len(get_bad_rows(child)) > 0:
-                    #     mutation_among_bad_rows(child, fixed_positions, get_bad_rows(child), True)
-                    # else:
-
-                # ВОТ СЮДА Я ДОБАВИЛ МЕГА РАНДОМНУЮ МУТАЦИЮ!!!!!!!!!!!!!!!!!!!
+                # very random func
                 # elif random_number < 0.05:
                 #     child = self.very_random_mutation()
-
-
 
                 next_generation.append(child)
 
@@ -336,19 +312,7 @@ class GeneticAlgorithm():
 
         return new_entity
 
-    """
-    При использовании функции-итерации в начале нужно добавить data_init() из data_saver.py
-    
-    Функция итерации должна быть внутри цикла for generation in generations, где generations - это кол-во популяций
-    Этой функции передавать номер популяции generation
-    После цикла добавить:
-    
-    print("Max generations reached.")
-    plot_progress(self.best_fitness_values)
-    return max(self.population, key = self.fitness_full)
-    
-    Короче ориентироваться на то как работает main_cycle если что
-    """
+
     def one_iteration(self, population_size, mutation_rate, generation):
 
         # /finding best fitness
@@ -380,21 +344,7 @@ class GeneticAlgorithm():
         # / crossing + mutation
         while len(next_generation) < population_size:
             parent1, parent2 = random.sample(selected, 2)
-            # child = self.uniform_crossover_cell(parent1, parent2)
-            # child = []
-            # if random.random() < crossover_rate:
-            # child = self.one_point_crossing_sq(parent1, parent2)
-
-            # else:
-            #     next_generation.append(parent1)
-            #     next_generation.append(parent2)
-            #     continue
-
             child = []
-            # child = self.one_point_crossing_sq(parent1, parent2, fixed_positions)
-            # child1 = uniform_crossover_cell(parent1, parent2, fixed_positions)
-            # child2 = uniform_crossover_cell(parent1, parent2, fixed_positions)
-            # child3 = uniform_crossover_cell(parent1, parent2, fixed_positions)
             cross_mode = random.choice([1, 2, 3])
             if cross_mode == 1:
                 child = self.uniform_crossover_sq(parent1, parent2)
@@ -407,11 +357,7 @@ class GeneticAlgorithm():
                 # self.row_shuffle_mutation(child)
                 self.random_mutation(child)
 
-                # if len(get_bad_rows(child)) > 0:
-                #     mutation_among_bad_rows(child, fixed_positions, get_bad_rows(child), True)
-                # else:
-
-            # ВОТ СЮДА Я ДОБАВИЛ МЕГА РАНДОМНУЮ МУТАЦИЮ!!!!!!!!!!!!!!!!!!!
+            # very random mutation
             # elif random_number < 0.05:
             #     child = self.very_random_mutation()
 
@@ -419,18 +365,14 @@ class GeneticAlgorithm():
 
         # / generating new population
         self.population = next_generation
-
-
 # =========================================================
-def main_start(field: list[list[str]], population_size: int, generation_size: int, p_mutation: float):
-    gen_alg = GeneticAlgorithm()
-    gen_alg.get_data(field, 'l')
-    gen_alg.GeneratePopulation(population_size)
-    solution = gen_alg.main_cycle(generation_size, population_size, p_mutation)
+
 
 # ========================== print individual
 def print_ind(ind):
     print('\n'.join([' '.join(list(map(str, ind[i]))) for i in range(9)]) + '\n')
+
+
 # ==========================
 def calculate_population_diversity(population: list[list[list[int]]]) -> float:
 
@@ -447,48 +389,11 @@ def calculate_population_diversity(population: list[list[list[int]]]) -> float:
     return diversity_percent
 # ==========================
 
+
 # ======================================================================================================
 # ======================================================================================================
-# ======================================================================================================
-
-
-# # Данные для графика (будут обновляться)
-# generations = []
-# best_fitness = []
-
-
-    
-#     # Можно добавить небольшую задержку для плавности
-#     plt.pause(0.01)
-
-# # Пример генетического алгоритма
-# def genetic_algorithm(population_size=50, generations=100):
-#     population = np.random.rand(population_size)
-    
-#     for gen in range(generations):
-#         # Здесь вычисляется приспособленность (пример)
-#         fitness = np.sin(population * 10) + 1  # Простая тестовая функция
-        
-#         # Выбираем лучшую приспособленность
-#         best_current_fitness = np.max(fitness)
-        
-#         # Обновляем график
-#         update_plot(gen, best_current_fitness)
-        
-#         # Селекция, кроссовер, мутация (упрощённо)
-#         best_idx = np.argmax(fitness)
-#         population = np.clip(population + np.random.randn(population_size) * 0.1, 0, 1)
-    
-#     plt.ioff()  # Выключаем интерактивный режим
-#     plt.show()  # Показываем финальный график
-
-# # Запускаем алгоритм
-# genetic_algorithm()
-
-
 if __name__ == "__main__":
     gen_alg = GeneticAlgorithm()
-    # gen_alg.insert_list_indexes =[(1, 1), (5, 6), (2, 8)]
     gen_alg.get_data('example.txt', 'f')
     gen_alg.GeneratePopulation(400)
 

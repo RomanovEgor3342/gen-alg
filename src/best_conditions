@@ -1,5 +1,0 @@
-#for empty field
-
-population: 500
-mutation_rate = 0.55
-generation_man = 10000

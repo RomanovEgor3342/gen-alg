@@ -1,9 +1,9 @@
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtCore import QThread, pyqtSignal, QTimer
+from PyQt5.QtCore import QTimer
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.figure import Figure
 from genetic_algorithm import *
-import time
+
 
 
 class UiMainWindow(object):
