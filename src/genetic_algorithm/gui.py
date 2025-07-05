@@ -607,6 +607,7 @@ class UiMainWindow(object):
             if hasattr(self, 'canvas'):
                 self.graph_layout.removeWidget(self.canvas)
                 self.canvas.setParent(None)
+
             self.screen.setText('')
             self.progressBar.setValue(0)
             self.tableWidget.setRowCount(0)
@@ -685,6 +686,15 @@ class UiMainWindow(object):
             self.generations = int(self.enter_max.text())
             self.p_mutation = float(self.spin_mutation.text().replace(',', '.'))
             self.update_table()
+
+            self.figure = Figure(figsize=(10, 5), tight_layout=True)
+            self.figure.patch.set_facecolor((224 / 255, 225 / 255, 225 / 255))
+            self.canvas = FigureCanvas(self.figure)
+            self.ax = self.figure.add_subplot(111)
+            self.ax.set_facecolor((224 / 255, 225 / 255, 225 / 255))
+            self.graph_layout.addWidget(self.canvas)
+            self.canvas.show()
+
             self.to_end.setEnabled(True)
             self.one_step.setEnabled(True)
             self.download_btn.setEnabled(False)
