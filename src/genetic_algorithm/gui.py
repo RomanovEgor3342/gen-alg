@@ -1,5 +1,5 @@
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal, QTimer
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.figure import Figure
 from genetic_algorithm import *
@@ -516,9 +516,9 @@ class UiMainWindow(object):
         if not self.is_pause:  # Если снимаем паузу
             if hasattr(self, 'generation_timer'):
                 self.generation_timer.start(0)  # Запускаем таймер
-                self.pause.setText("▶")
+                self.pause.setText("⏸")
         else:
-            self.pause.setText("⏸")
+            self.pause.setText("▶")
 
     # ========================================
     #   Проверка поля
